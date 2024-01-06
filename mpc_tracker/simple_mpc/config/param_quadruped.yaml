@@ -1,0 +1,11 @@
+mpc:
+  mpc_type: 2                 # MPC类型 0: Ackman_MPC, 1: Differential_MPC, 2: Quadruped_MPC
+  dt: 0.10                    # 离散时间，轨迹参考点的间隔时间和定时器计算时间
+  predict_steps: 10           # 预测步长，
+  L: 0.608                    # 轴距，阿克曼小车需要用
+  max_delta: 0.5              # 最大角速度(Differential_MPC)，最大前轮转角(Ackman_MPC)
+  max_speed: 1.0              # 最大速度
+  min_speed: -1.0             # 最大速度
+  max_speed_y: 0.5           # y轴最大速度
+  matrix_q: [2.0, 2.0, 1.0]   # Q矩阵，size必须为 3, 分别表示状态误差 P.x, P.y, theta 的权重
+  matrix_r: [0.5, 0.2, 0.4]   # R矩阵，size必须为 3, 分别表示控制输入 vx, vy，w 的权重

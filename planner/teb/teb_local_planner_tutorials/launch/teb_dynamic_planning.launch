@@ -1,0 +1,32 @@
+<launch>
+
+  <!-- work around for footprint reload -->
+  <rosparam command="delete" ns="move_base" />
+
+  <!--  ******************* Maps ***********************  -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find teb_local_planner_tutorials)/maps/empty_world.yaml" output="screen">
+    <param name="frame_id" value="world"/>
+  </node>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find teb_local_planner_tutorials)/cfg/dynamic/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find teb_local_planner_tutorials)/cfg/dynamic/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find teb_local_planner_tutorials)/cfg/dynamic/dyn_obst/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find teb_local_planner_tutorials)/cfg/dynamic/dyn_obst/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find teb_local_planner_tutorials)/cfg/dynamic/dyn_obst/teb_local_planner_params.yaml" command="load" />
+    <!-- Here we load our costmap conversion settings -->
+    <!-- If you active the following line, disable 'ground_truth_obstacles' at the bottom of this script! -->
+    <!-- rosparam file="$(find teb_local_planner_tutorials)/cfg/dynamic/dyn_obst/costmap_converter_params.yaml" command="load" /-->
+    <param name="TebLocalPlannerROS/include_costmap_obstacles" value="False" />
+    <param name="TebLocalPlannerROS/include_dynamic_obstacles" value="True" />
+
+    <param name="base_global_planner" value="navfn/NavfnROS" />
+    <param name="planner_frequency" value="0.5" />
+
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+    <param name="controller_frequency" value="20.0" />
+    <param name="controller_patience" value="0.0" />
+    <remap from="map" to="/map"/>
+  </node>
+
+</launch>

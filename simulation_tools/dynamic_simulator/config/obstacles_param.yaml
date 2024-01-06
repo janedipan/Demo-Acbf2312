@@ -1,0 +1,10 @@
+obstacle_params:
+  - {x: 3.0, y: 0.0, z: 0.75, offset: 3.14, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
+  - {x: 7.0, y: 0.0, z: 0.75, offset: -3.14, slower: 5.0, scale_x: 6.0, scale_y: 0.0, scale_z: 0.0}
+  - {x: 7.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
+  - {x: 9.0, y: 0.0, z: 0.75, offset: -3.14, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
+  - {x: 11.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
+  - {x: 13.0, y: 0.0, z: 0.75, offset: -3.14, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
+  - {x: 15.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
+  - {x: 15.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 6.0, scale_y: 0.0, scale_z: 0.0}
+  - {x: 19.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}

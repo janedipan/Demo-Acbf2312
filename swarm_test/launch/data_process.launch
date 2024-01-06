@@ -1,0 +1,23 @@
+<launch>
+
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- <arg name="bag_name" value="dcbf_test1.bag"/> -->
+  <!-- <arg name="bag_name" value="scbf_test2.bag"/> -->
+  <!-- <arg name="bag_name" value="teb_test1.bag"/> -->
+  <arg name="bag_name" value="vomp_test1.bag"/>
+
+
+  <node pkg="rosbag" type="play" name="player" args="--clock /workspace/proj/wx_navigation/experiments/$(arg bag_name)"/>
+
+
+  <!-- 收集实验数据并输出结果 -->
+  <node pkg="swarm_test" type="data_processor_node" name="data_processor_node" output="screen">
+    <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
+    <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
+    <param name="/obs_manager/use_GroundTruth"  value="true" type="bool"/>
+  </node>
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/data_process.rviz" />
+
+</launch>

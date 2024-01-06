@@ -1,0 +1,41 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/workspace/proj/wx_navigation/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/quadruped_simulator/champ/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/quadruped_simulator/champ_base/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/quadruped_simulator/champ_config/include/**",
+        "/workspace/proj/wx_navigation/src/planner/dwa_planner/include/**",
+        "/workspace/proj/wx_navigation/src/perception/dynamic_perception/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/dynamic_simulator/include/**",
+        "/workspace/proj/wx_navigation/src/state_estimation/FAST_LIO/include/**",
+        "/workspace/proj/wx_navigation/src/perception/mapping/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/Utils/multi_map_server/include/**",
+        "/workspace/proj/wx_navigation/src/perception/plan_env/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/Utils/pose_utils/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/Utils/quadrotor_msgs/include/**",
+        "/workspace/proj/wx_navigation/src/mpc_tracker/simple_mpc/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/so3_control/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/so3_disturbance_generator/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/so3_quadrotor_simulator/include/**",
+        "/workspace/proj/wx_navigation/src/swarm_test/include/**",
+        "/workspace/proj/wx_navigation/src/planner/teb/teb_local_planner/include/**",
+        "/workspace/proj/wx_navigation/src/planner/vomp_planner/traj_planner/include/**",
+        "/workspace/proj/wx_navigation/src/simulation_tools/fast_planner_sim/Utils/uav_utils/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

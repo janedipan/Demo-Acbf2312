@@ -1,0 +1,1 @@
+/usr/bin/c++   -pthread  -rdynamic CMakeFiles/lidar_sample.dir/main.c.o  -o lidar_sample  ../../sdk_core/liblivox_sdk_static.a 

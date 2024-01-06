@@ -1,0 +1,28 @@
+<launch>
+
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_z" default="3.0"/>
+
+  <!-- 差速机器人数值仿真 -->
+  <include file="$(find robot_simulator)/launch/vis_scout_using_odometry.launch">
+    <arg name="odometry_topic" value="/Odometry"/>
+  </include>
+
+  <!-- 差速MPC -->
+  <include file="$(find simple_mpc)/launch/mpc_differential.launch">
+    <arg name="odom_topic"      value="/Odometry"/>
+    <arg name="traj_topic"      value="dynamic_planner_node/mpc/traj_point"/>
+    <arg name="cmd_topic"       value="cmd_vel"/>
+  </include>
+
+  <!-- kinoAstar局部规划-->
+  <include file="$(find traj_planner)/launch/plan_kino_traj.launch">
+    <arg name="odometry_topic"      value="/Odometry"/>
+    <arg name="cloud_topic"         value="/fastLIO/points_world1"/>
+    <arg name="_perception_GroundTruth" value="false"/>
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/kino_plan.rviz" />
+
+</launch>

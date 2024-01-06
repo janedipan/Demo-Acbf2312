@@ -1,0 +1,8 @@
+<launch>
+
+  <arg name="bag_file" default="/workspace/proj/dmpl_ws/2023-06-13-16-31-05.bag" />
+  <arg name="player_rate" default="1" />
+
+  <node name="player" pkg="rosbag" type="play" args="--quiet --rate $(arg player_rate) $(arg bag_file) -d 1 --clock" /> 
+
+</launch>

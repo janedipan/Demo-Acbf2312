@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- 启动Fast-LIO2 -->
+  <include file="$(find fast_lio)/launch/mapping_velodyne.launch">
+    <arg name="rviz" value="false"/>
+  </include>
+  
+  <!-- 发布静态坐标变换 -->
+  <node pkg="tf" type="static_transform_publisher" name="worldLinkcamera" args="0.0 0.0 0.0 0.0 0.0 0.0 world camera_init 0.0010" />
+  <node pkg="tf" type="static_transform_publisher" name="bodyLinkbaselink" args="0.0 0.0 0.0 0.0 0.0 0.0 body base_link 0.0010" />
+
+</launch>

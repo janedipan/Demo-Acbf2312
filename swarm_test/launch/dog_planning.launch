@@ -1,0 +1,22 @@
+<launch>
+
+  <!-- MPC轨迹跟踪控制器-->
+  <include file="$(find simple_mpc)/launch/mpc_differential.launch">
+    <arg name="odom_topic"      value="/odometry"/>
+    <arg name="traj_topic"      value="dynamic_planner_node/mpc/traj_point"/>
+    <arg name="cmd_topic"       value="cmd_vel"/>
+  </include>
+
+  <!-- 点云坐标变换, 从雷达坐标系转换到/world系 -->
+  <node pkg="swarm_test" type="pointcloud_fixed_node" name="pointcloud_fixed_node">
+    <remap from="/velodyne_points"   to="/velodyne_points"/>
+    <remap from="/fixed_points"      to="/fixed_points"/>
+  </node>
+
+  <!-- kinoAstar局部规划-->
+  <include file="$(find swarm_test)/include/dog_kino_traj.launch">
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/kino_plan.rviz" />
+
+</launch>

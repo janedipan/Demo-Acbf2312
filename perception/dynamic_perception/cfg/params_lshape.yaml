@@ -1,0 +1,49 @@
+# parameters setting
+l_shape_fitting:
+    criterion: CLOSENESS
+    target_frame: world
+    filter_res: 0.0
+
+    input_topic: "/clustering/cluster_array"
+    output_objects_topic: "/l_shape_fitting/autoware_objects"
+    visualization_topic: "/l_shape_fitting/jsk_bbox_array"
+
+# AREA,
+# CLOSENESS,
+# VARIANCE,
+
+# AREA
+# aver_mean is = 4.88349
+# bias_std is = 8.55071
+
+# CLOSENESS 0.01
+# aver_mean is = 2.58663
+# bias_std is = 5.3901
+
+# CLOSENESS 0.05
+# aver_mean is = 1.76461
+# bias_std is = 3.80528
+
+
+
+# VARIANCE
+# aver_mean is = 3.88329
+# bias_std is = 5.49198
+
+
+
+# CLOSENESS
+# aver_mean is = 1.90395
+# bias_std is = 3.23767
+
+# AREA
+# bias_std is = 5.72748
+# aver_accy is = 2.83003
+
+# VARIANCE,
+# bias_std is = 2.27318
+# aver_accy is = 1.91081
+
+
+# bias_std is = 6.87719
+# aver_accy is = 4.80785

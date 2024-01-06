@@ -1,0 +1,17 @@
+<launch>
+  <!-- 在这里配置话题：机器人里程、参考轨迹、控制指令 -->
+  <arg name="odom_topic" default="/scout1/odometry" />
+  <arg name="traj_topic" default="/scout1/dynamic_planner_node/mpc/traj_point" />
+  <arg name="cmd_topic"  default="/scout1/cmd_vel" />
+
+  <!-- mpc相关参数加载 -->
+  <rosparam command="load" file="$(find simple_mpc)/config/param_differential.yaml" />
+
+  <!-- mpc主程序 -->
+  <node pkg="simple_mpc" name="mpc_node_diffenrential" type="mpc_node" output="screen">
+    <remap from="/cmd_vel"   to="$(arg cmd_topic)"/>
+    <remap from="/odom"      to="$(arg odom_topic)"/>
+    <remap from="/traj"      to="$(arg traj_topic)"/>
+  </node>
+
+</launch>

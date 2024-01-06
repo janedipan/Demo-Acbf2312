@@ -1,0 +1,48 @@
+<launch>
+
+  <arg name="rviz_vis" default="true"/>
+
+  <group ns="scout1">
+    <include file="$(find robot_simulator)/launch/scout_simulator.xml">
+      <arg name="ugv_id" value="1"/>
+      <arg name="init_x_" value="0.0"/>
+      <arg name="init_y_" value="-1.0"/>
+      <arg name="init_z_" value="0.1"/>
+      <arg name="map_size_x_" value="20.0"/>
+      <arg name="map_size_y_" value="20.0"/>
+      <arg name="map_size_z_" value="2.0"/>
+      <arg name="odometry_topic" value="odometry" />
+      <arg name="mesh_topic" value="vis_mesh" />
+    </include>
+  </group>
+
+  <!-- <group ns="hunter1">
+    <include file="$(find robot_simulator)/launch/hunter_simulator.xml">
+      <arg name="ugv_id" value="1"/>
+      <arg name="init_x_" value="0.0"/>
+      <arg name="init_y_" value="1.0"/>
+      <arg name="init_z_" value="0.3"/>
+      <arg name="map_size_x_" value="20.0"/>
+      <arg name="map_size_y_" value="20.0"/>
+      <arg name="map_size_z_" value="2.0"/>
+      <arg name="odometry_topic" value="odometry" />
+      <arg name="mesh_topic" value="vis_mesh" />
+    </include>
+  </group> -->
+
+  <include file="$(find joy_stick)/launch/run_joy_stick.launch"/>
+
+  <include file="$(find map_generator)/launch/map.launch">
+    <arg name="rviz_vis" value="false"/>
+    <arg name="map_size_x_" value="20.0"/>
+    <arg name="map_size_y_" value="20.0"/>
+    <arg name="map_size_z_" value="2.0"/>
+    <arg name="c_num" value="0"/>
+    <arg name="p_num" value="20"/>
+  </include>
+
+  <group if="$(arg rviz_vis)">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find robot_simulator)/param/vis_car.rviz" output="log" respawn="false" />
+  </group>
+
+</launch>

@@ -1,0 +1,12 @@
+<launch>
+  <arg name="odometry_topic" default = "/odom_horizon"/>
+  <arg name="marker_topic" default = "/vis_mesh"/>
+
+
+  <node pkg="robot_simulator" type="scout_visualizer_node" name="scout_visualizer_node" output="screen">
+    <param name="ugv/mesh" value="package://robot_simulator/param/scout2.STL" type="string"/>
+    <remap from="~odometry" to="$(arg odometry_topic)"/>
+    <remap from="~odom_mesh" to="$(arg marker_topic)"/>
+  </node>
+
+</launch>

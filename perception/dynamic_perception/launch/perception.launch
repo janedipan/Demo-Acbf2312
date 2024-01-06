@@ -1,0 +1,40 @@
+<launch>
+
+  <!-- 使用rosbag时, 必须设置为true; 实物实验请设置为false -->
+  <param name="/use_sim_time" value="true"/>
+
+  <arg name="rviz"            default="true" />
+
+  <rosparam file="$(find dynamic_perception)/cfg/params_lshape.yaml" command="load" /> 
+
+  <!-- 启动fast_lio 定位 + 地面点云过滤 -->
+  <include file="$(find fast_lio)/launch/mapping_velodyne_bags.launch" />
+
+  <!-- 启动DBSCAN聚类 -->
+  <node pkg="dynamic_perception" type="ri_dbscan_node" name="ri_dbscan_node">
+    <param name="non_ground_cloud_topic"        value="/fastLIO/non_ground_points"/>
+    <param name="output_frame"                  value="world"/>
+    <param name="output_cluster_array_topic"    value="/clustering/cluster_array"/>
+    <param name="colored_cloud_topic"           value="/clustering/colored_cloud"/>
+  </node>
+
+  <!-- 启动L形拟合 -->
+  <node pkg="dynamic_perception" type="l_shape_fitting" name="L_shape_fitting"/>
+
+  <!-- 启动轨迹预测 -->
+  <node pkg="dynamic_perception" type="obstacle_prediction_node" name="obstacle_prediction_node" output="screen">
+    <param name="/obstacle_prediction_node/max_frames_skipped" value="4" type="int"/>
+    <param name="/obstacle_prediction_node/meters_to_create_new_track" value="1.0" type="double"/>
+  </node>
+
+  <!-- 启动障碍物管理 -->
+  <!-- <node pkg="dynamic_perception" type="obs_manager_node" name="obs_manager_node" output="screen">
+    <param name="/obs_manager/use_GroundTruth" value="false" type="bool"/>
+  </node> -->
+
+  <!-- RVIZ可视化 -->
+  <group if="$(arg rviz)">
+    <node type="rviz" name="rviz1" pkg="rviz" args="-d $(find dynamic_perception)/cfg/ri_dbscan.rviz" output="log" respawn="false" />
+  </group>
+
+</launch>

@@ -1,0 +1,27 @@
+<launch>
+  <arg name="gazebo"      default="false" />    <!-- 是否启动gazebo仿真器 -->
+  <arg name="gzclient"    default="false"/>     <!-- 是否启动gazebo可视化 -->
+  <arg name="rviz"        default="false"/>     <!-- 是否启动RVIZ可视化 -->
+  <arg name="num_of_obs"  default="10" />       <!-- 障碍物数量 -->
+
+  <!-- 启动gazebo仿真 -->
+  <include if="$(arg gazebo)" file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find dynamic_simulator)/config/dynamic_world.world"/>
+    <arg name="gui" value="$(arg gzclient)"/>
+    <arg name="use_sim_time" value="true"/>
+  </include>
+
+  <!-- 加载障碍物参数 -->
+  <rosparam command="load" file="$(find dynamic_simulator)/config/obstacles_param.yaml" />
+
+  <!-- 生成动态障碍物的脚本 -->
+  <!-- <node name="dynamic_corridor" pkg="dynamic_simulator" type="generate_agents.py" args="$(arg num_of_obs) $(arg gazebo)" output="screen"/>  -->
+  <node name="dynamic_corridor" pkg="dynamic_simulator" type="generate_agents_fixed_poses.py" args="$(arg num_of_obs) $(arg gazebo)" output="screen"/> 
+
+  <!-- rviz可视化 -->
+  <node if="$(arg rviz)" name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find dynamic_simulator)/config/dynamic_simulator.rviz" />
+
+</launch>
+
+
+

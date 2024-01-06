@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- 参考panther的输出的文件，关闭重力，但是还是直接设置重力为0好点 -->
+    <!-- <plugin name="disable_physics" filename="libdisable_physics.so"/> -->
+
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- <physics type='ode'>
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <gravity>0 0 -9.8</gravity>
+    </physics> -->
+
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.76 0.76 0.72 1</background>
+      <shadows>0</shadows>
+  <sky>
+    <clouds>
+      <speed>12</speed>
+    </clouds>
+  </sky>
+    </scene>
+  </world>
+
+</sdf>

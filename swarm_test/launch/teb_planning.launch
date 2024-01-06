@@ -1,0 +1,72 @@
+<launch>
+
+  <param name="/use_sim_time" value="false"/>
+
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_z" default="3.0"/>
+
+  <!-- 随机地图仿真环境 -->
+  <include file="$(find map_generator)/launch/map.launch">
+    <arg name="rviz_vis"    value="false"/>
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="c_num"       value="0"/>
+    <arg name="p_num"       value="1"/>
+  </include>
+
+  <!-- 动态障碍物仿真环境 -->
+  <!-- <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle.launch">
+    <arg name="num_of_obs" value="10" />
+  </include> -->
+
+  <!-- 差速机器人数值仿真 -->
+  <include file="$(find robot_simulator)/launch/scout_simulator.xml">
+    <arg name="ugv_id"         value="1"/>
+    <arg name="time_res_"      value="0.05"/>   <!-- 仿真时间精度-->
+    <arg name="init_x_"        value="0.0"/>
+    <arg name="init_y_"        value="0.0"/>
+    <arg name="init_z_"        value="0.2"/>
+    <arg name="map_size_x_"    value="$(arg map_size_x)"/>
+    <arg name="map_size_y_"    value="$(arg map_size_y)"/>
+    <arg name="map_size_z_"    value="$(arg map_size_z)"/>
+    <arg name="odometry_topic" value="/odometry" />
+    <arg name="mesh_topic"     value="vis_mesh" />
+  </include>
+
+  <!-- 启动障碍物管理 -->
+  <node pkg="traj_planner" type="obs_Manager_node" name="obs_Manager_node" output="screen">
+    <remap from="/trajs_predicted"                                          to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
+    <remap from="/trajs"                                                    to="/Dyn_Obs_trajs"/>
+    <remap from="/obs_Manager_node/move_base/TebLocalPlannerROS/obstacles"  to="/move_base/TebLocalPlannerROS/obstacles"/>
+
+    <param name="/obs_manager/use_GroundTruth"  value="true" type="bool"/>
+  </node>  
+
+  <!-- 走廊可视化 -->
+  <node pkg="swarm_test" type="corridor_visualization_node" name="corridor_visualization_node">
+    <param name="corridor_visualization/wall_width"  value="0.20" type="double"/>
+    <param name="corridor_visualization/x_offset"    value="1.00" type="double"/>
+    <param name="corridor_visualization/box_scale_x" value="22.0" type="double"/>
+    <param name="corridor_visualization/box_scale_y" value="8.00" type="double"/>
+    <param name="corridor_visualization/box_scale_z" value="1.00" type="double"/>
+  </node>
+
+  <node pkg="swarm_test" type="odom_traj_visualization_node" name="odom_traj_visualization_node">
+    <remap from="/odometry" to="/odometry"/>
+    <param name="odom_traj_vis/line_width"     value="0.05" type="double"/>
+    <param name="odom_traj_vis/color_r"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/color_g"        value="0.0" type="double"/>
+    <param name="odom_traj_vis/color_b"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/color_a"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/show_odom_size" value="2000" type="int"/>
+  </node>
+
+  <!-- TEB规划-->
+  <include file="$(find teb_local_planner_tutorials)/launch/teb_dynamic_planning.launch">
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/teb_plan.rviz" />
+
+</launch>

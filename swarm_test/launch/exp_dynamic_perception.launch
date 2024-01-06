@@ -1,0 +1,10 @@
+<launch>
+
+  <include file="$(find dynamic_perception)/launch/play_bag.launch" />
+  
+  <!-- 定位 + 动态障碍物感知 -->
+  <include file="$(find dynamic_perception)/launch/perception.launch" >
+    <arg name="rviz" value="false"/>
+  </include>
+
+</launch>

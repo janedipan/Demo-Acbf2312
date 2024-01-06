@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dwa_planner</name>
+  <version>0.0.0</version>
+  <description>The dwa_planner package</description>
+  <maintainer email="amsl@todo.todo">amsl</maintainer>
+
+  <license>BSD 3-Clause License</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf</depend>
+  <depend>eigen</depend>
+  <test_depend>rostest</test_depend>
+  <test_depend>roslint</test_depend>
+
+  <export>
+  </export>
+
+</package>

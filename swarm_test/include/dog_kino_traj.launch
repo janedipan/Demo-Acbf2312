@@ -1,0 +1,124 @@
+<launch>
+
+  <arg name="_drone_id"      default="0"/>
+
+  <arg name="map_size_x_"    default="50.0"/>
+  <arg name="map_size_y_"    default="50.0"/>
+  <arg name="map_size_z_"    default="2.0"/>
+
+  <arg name="_use_UserGoal"  default="false"/>
+  <arg name="_goal_x"        default="10.0"/>
+  <arg name="_goal_y"        default="0.0"/>
+  <arg name="_goal_yaw"      default="0.0"/>
+
+  <arg name="odometry_topic" default="odometry"/>
+  <arg name="cloud_topic"    default="velodyne_points_world"/>
+
+  <node pkg="traj_planner" type="dynamic_planner_node" name="dynamic_planner_node" output="screen">
+    <!-- Remap Topic -->
+    <remap from="/odom_world"                 to="$(arg odometry_topic)"/>
+    <remap from="~waypoints"                  to="/move_base_simple/goal"/>
+    <remap from="/vis_dense_kino_traj"        to="vis_kino_traj"/>
+    <remap from="/trajs"                      to="/Dyn_Obs_trajs"/>        <!--动态障碍物轨迹topic-->
+    <remap from="/sdf_map/odom"               to="$(arg odometry_topic)"/>
+    <remap from="/sdf_map/cloud"              to="$(arg cloud_topic)"/>
+
+    <!-- 机器人ID -->
+    <param name="drone_id"              value="$(arg _drone_id)"/>
+
+    <!-- 重规划状态机 -->
+    <param name="fsm/thresh_replan"     value="1.2" type="double"/>
+    <param name="fsm/thresh_no_replan"  value="1.0" type="double"/>
+
+    <param name="use_presetGoal"        value="$(arg _use_UserGoal)"/>
+    <param name="goal_x"                value="$(arg _goal_x)"/>
+    <param name="goal_y"                value="$(arg _goal_y)"/>
+    <param name="goal_yaw"              value="$(arg _goal_yaw)"/>
+
+    <!-- 控制点采样间隔 -->
+    <param name="manager/init_traj_sample_time"   value="0.5" type="double"/>
+
+    <!-- kinodynamic path searching -->
+    <param name="search/max_tau"            value="0.5" type="double"/>
+    <param name="search/init_max_tau"       value="1.0" type="double"/>
+    <param name="search/max_vel"            value="1.2" type="double"/>
+    <param name="search/max_acc"            value="1.0" type="double"/>
+    <param name="search/omega_max"          value="0.6" type="double"/>
+    <param name="search/w_time"             value="10.0" type="double"/>
+    <param name="search/horizon"            value="20.0" type="double"/>
+    <param name="search/lambda_heu"         value="5.0" type="double"/>
+    <param name="search/resolution_astar"   value="0.1" type="double"/>
+    <param name="search/time_resolution"    value="0.8" type="double"/>
+    <param name="search/margin"             value="0.2" type="double"/>
+    <param name="search/allocate_num"       value="10000" type="int"/>
+    <param name="search/check_num"          value="5" type="int"/>
+    <param name="search/is_consider_omega"  value="false" type="bool"/>
+    <param name="search/is_used_VO"         value="true" type="bool"/>
+
+    <!-- trajectory optimization -->
+    <param name="optimization/lambda_Smoothness"  value="50.0" type="double"/>
+    <param name="optimization/lambda_SdfDistance" value="0.10" type="double"/>
+    <param name="optimization/lambda_Feasibility" value="0.10" type="double"/>
+    <param name="optimization/lambda_EndPoint"    value="0.01" type="double"/>
+    <param name="optimization/lambda_GuidePoint"  value="10.0" type="double"/>
+    <param name="optimization/lambda_WayPoint"    value="0.1" type="double"/>
+    <param name="optimization/lambda_Curvature"   value="10.0" type="double"/>
+    <param name="optimization/lambda_DynObsDis"   value="50.0" type="double"/>
+
+    <param name="optimization/dist0"   value="0.6" type="double"/>
+    <param name="optimization/max_vel" value="1.2" type="double"/>
+    <param name="optimization/max_acc" value="1.0" type="double"/>
+
+    <param name="optimization/algorithm1" value="15" type="int"/>
+    <param name="optimization/algorithm2" value="11" type="int"/>
+
+    <param name="optimization/max_iteration_num1" value="2" type="int"/>
+    <param name="optimization/max_iteration_num2" value="1000" type="int"/>
+    <param name="optimization/max_iteration_num3" value="200" type="int"/>
+    <param name="optimization/max_iteration_num4" value="200" type="int"/>
+
+    <param name="optimization/max_iteration_time1" value="0.0001" type="double"/>
+    <param name="optimization/max_iteration_time2" value="0.050" type="double"/>
+    <param name="optimization/max_iteration_time3" value="0.003" type="double"/>
+    <param name="optimization/max_iteration_time4" value="0.003" type="double"/>
+
+    <!-- 地图参数 -->
+    <param name="sdf_map/resolution"            value="0.1" />
+    <param name="sdf_map/map_size_x"            value="$(arg map_size_x_)" /> 
+    <param name="sdf_map/map_size_y"            value="$(arg map_size_y_)" /> 
+    <param name="sdf_map/map_size_z"            value="$(arg map_size_z_)" /> 
+    <param name="sdf_map/local_update_range_x"  value="10.0" />
+    <param name="sdf_map/local_update_range_y"  value="10.0" />
+    <param name="sdf_map/local_update_range_z"  value="4.5" />
+    <!-- 膨胀半径 -->
+    <param name="sdf_map/obstacles_inflation"     value="0.1" /> 
+    <param name="sdf_map/local_bound_inflate"     value="0.0"/>
+    <param name="sdf_map/local_map_margin"        value="50"/>
+    <param name="sdf_map/ground_height"           value="0.0"/>
+    <!-- depth filter -->
+    <param name="sdf_map/use_depth_filter" value="true"/>
+    <param name="sdf_map/depth_filter_tolerance" value="0.15"/>
+    <param name="sdf_map/depth_filter_maxdist"   value="5.0"/>
+    <param name="sdf_map/depth_filter_mindist"   value="0.2"/>
+    <param name="sdf_map/depth_filter_margin"    value="2"/>
+    <param name="sdf_map/k_depth_scaling_factor" value="1000.0"/>
+    <param name="sdf_map/skip_pixel" value="2"/>
+    <!-- local fusion -->
+    <param name="sdf_map/p_hit"  value="0.65"/>
+    <param name="sdf_map/p_miss" value="0.35"/>
+    <param name="sdf_map/p_min"  value="0.12"/>
+    <param name="sdf_map/p_max"  value="0.90"/>
+    <param name="sdf_map/p_occ"  value="0.80"/>
+    <param name="sdf_map/min_ray_length" value="0.5"/>
+    <param name="sdf_map/max_ray_length" value="10.0"/>
+
+    <param name="sdf_map/esdf_slice_height" value="0.3"/>
+    <param name="sdf_map/visualization_truncate_height"   value="2.49"/>
+    <param name="sdf_map/virtual_ceil_height"   value="2.5"/>
+    <param name="sdf_map/show_occ_time"  value="false"/>
+    <param name="sdf_map/show_esdf_time" value="false"/>
+    <param name="sdf_map/pose_type"     value="1"/>  
+    <param name="sdf_map/frame_id"      value="world"/>
+  </node>
+
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+
+  <include file="$(find dynamic_perception)/launch/play_bag.launch" />
+
+  <include file="$(find dynamic_perception)/launch/perception.launch" />
+
+</launch>

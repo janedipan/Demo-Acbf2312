@@ -1,0 +1,65 @@
+<launch>
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_z" default="5.0"/>
+
+  <!-- 随机地图仿真环境 -->
+  <include file="$(find map_generator)/launch/map.launch">
+    <arg name="rviz_vis"    value="false"/>
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="c_num"       value="0"/>
+    <arg name="p_num"       value="10"/>
+  </include>
+
+  <!-- 差速机器人数值仿真 -->
+  <include file="$(find robot_simulator)/launch/scout_simulator.xml">
+    <arg name="ugv_id"         value="1"/>
+    <arg name="time_res_"      value="0.01"/>
+    <arg name="init_x_"        value="0.0"/>
+    <arg name="init_y_"        value="0.0"/>
+    <arg name="init_z_"        value="0.3"/>
+    <arg name="map_size_x_"    value="$(arg map_size_x)"/>
+    <arg name="map_size_y_"    value="$(arg map_size_y)"/>
+    <arg name="map_size_z_"    value="$(arg map_size_z)"/>
+    <arg name="odometry_topic" value="/odometry" />
+    <arg name="mesh_topic"     value="vis_mesh" />
+  </include>
+
+  <!-- 占据栅格地图节点 -->
+  <node name="localMap_node" pkg="mapping" type="localMap_node" output="screen">
+    <param name="mapping/frame_id"           value="world"/>
+    <param name="mapping/odometry_topic"     value="/odometry"/>
+    <param name="mapping/lidar_topic"        value="/velodyne_points"/>
+    <param name="mapping/map_pub_topic"      value="/local_map"/>
+
+    <param name="mapping/lidar_height"       value="0.0"/>
+    <param name="mapping/resolution"         value="0.1"/>
+
+    <param name="mapping/map_size_x"       value="$(arg map_size_x)"/>
+    <param name="mapping/map_size_y"       value="$(arg map_size_y)"/>
+    <param name="mapping/map_size_z"       value="$(arg map_size_z)"/>
+    
+    <param name="mapping/origin_x"         value="-25.0" />   <!-- 地图起点设置 -->
+    <param name="mapping/origin_y"         value="-25.0" />
+    <param name="mapping/origin_z"         value="0.1" />
+
+    <param name="mapping/min_ray_length" value="0.0"/>
+    <param name="mapping/max_ray_length" value="10.0"/>
+
+		<param name="mapping/prob_hit_log"  value="1.2" />
+		<param name="mapping/prob_miss_log" value="-0.3" />
+		<param name="mapping/clamp_min_log" value="-2.0" />
+		<param name="mapping/clamp_max_log" value="2.0" />
+		<param name="mapping/min_occupancy_log" value="1.39" />
+  </node>
+
+
+  <!-- dwa局部规划-->
+  <include file="$(find dwa_planner)/launch/dwa_bringup.launch">
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/dynamic_plan.rviz" />
+
+</launch>

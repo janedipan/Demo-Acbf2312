@@ -1,0 +1,31 @@
+<launch>
+  <arg name="init_x_"/>
+  <arg name="init_y_"/>
+  <arg name="init_z_"/>
+  <arg name="map_size_x_"/>
+  <arg name="map_size_y_"/>
+  <arg name="map_size_z_"/>
+  <arg name="ugv_id"/>
+  <arg name="odometry_topic"/>
+  <arg name="mesh_topic"/>
+  <arg name="time_res_"/>
+
+  <node pkg="robot_simulator" type="hunter_simulator_node" name="hunter_$(arg ugv_id)_simulator_node" output="screen">
+    <param name="ugv/mesh" value="package://robot_simulator/param/hunter_se.STL" type="string"/>
+    <param name="car_id" value="$(arg ugv_id)"/>
+    <param name="time_res" value="$(arg time_res_)"/>
+    <param name="p_init_x" value="$(arg init_x_)" type="double"/>
+    <param name="p_init_y" value="$(arg init_y_)" type="double"/>
+    <param name="p_init_z" value="$(arg init_z_)" type="double"/>
+
+    <remap from="~command" to="cmd_vel"/>
+    <remap from="~odometry" to="$(arg odometry_topic)"/>
+    <remap from="~odom_mesh" to="$(arg mesh_topic)"/>
+  </node>
+
+  <include file="$(find laser_simulator)/launch/laser_sim.launch">
+    <arg name="car_id" value="$(arg ugv_id)"/>
+    <arg name="odom_topic" value="$(arg odometry_topic)" />
+  </include>
+
+</launch>

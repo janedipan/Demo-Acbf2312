@@ -1,0 +1,8 @@
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+ 
+  <node pkg="joy" type="joy_node" name="joy_node"/>
+ 
+  <node pkg="joy_stick" type="joy_stick_manager.py" name="joy_stick_manager" output="screen"/>
+ 
+</launch>

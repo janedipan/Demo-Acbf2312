@@ -1,0 +1,1 @@
+/usr/bin/c++   -pthread  -rdynamic CMakeFiles/hub_sample.dir/main.c.o  -o hub_sample  ../../sdk_core/liblivox_sdk_static.a 
