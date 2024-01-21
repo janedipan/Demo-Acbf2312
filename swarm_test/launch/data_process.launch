@@ -5,10 +5,10 @@
   <!-- <arg name="bag_name" value="dcbf_test1.bag"/> -->
   <!-- <arg name="bag_name" value="scbf_test2.bag"/> -->
   <!-- <arg name="bag_name" value="teb_test1.bag"/> -->
-  <arg name="bag_name" value="vomp_test1.bag"/>
+  <arg name="bag_name" value="tmp_2024-01-10-21-11-46.bag"/>
 
 
-  <node pkg="rosbag" type="play" name="player" args="--clock /workspace/proj/wx_navigation/experiments/$(arg bag_name)"/>
+  <node pkg="rosbag" type="play" name="player" args="--clock /home/pj/jane_ws-github/dynamic_avoidance/bag/$(arg bag_name)"/>
 
 
   <!-- 收集实验数据并输出结果 -->

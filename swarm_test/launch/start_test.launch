@@ -18,6 +18,6 @@
   </node>
 
   <!-- rosbag录制 -->
-	<node pkg="rosbag" type="record" name="bag_record" args="-a -o /workspace/proj/wx_navigation/experiments/tmp.bag"/>
+	<node pkg="rosbag" type="record" name="bag_record" args="-a -o /home/pj/jane_ws-github/dynamic_avoidance/bag/tmp.bag"/>
 
 </launch>
