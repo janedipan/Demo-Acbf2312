@@ -33,15 +33,15 @@ class Controller():
         y = math.atan2(2*(w*z+x*y), 1-2*(z*z+y*y))
         return r, p, y
 
-    def get_current_state(self, event):
-        try:
-            (trans, rot) = self.listener.lookupTransform('world', 'base_link', rospy.Time(0))
-            _, _, yaw = self.quart_to_rpy(rot[0], rot[1], rot[2], rot[3])
-            curr_state = Float32MultiArray()
-            curr_state.data = [trans[0], trans[1], yaw]
-            self.curr_state_pub.publish(curr_state)
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            pass
+    # def get_current_state(self, event):
+    #     try:
+    #         (trans, rot) = self.listener.lookupTransform('world', 'base_link', rospy.Time(0))
+    #         _, _, yaw = self.quart_to_rpy(rot[0], rot[1], rot[2], rot[3])
+    #         curr_state = Float32MultiArray()
+    #         curr_state.data = [trans[0], trans[1], yaw]
+    #         self.curr_state_pub.publish(curr_state)
+    #     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+    #         pass
 
     def pub_vel(self):
         control_cmd = Twist()
@@ -62,13 +62,14 @@ class Controller():
             self.local_plan[i, 0] = msg.data[0+2*i]
             self.local_plan[i, 1] = msg.data[1+2*i]
 
-    def odometry_sub_cb(self, msg):
+    def odometry_sub_cb(self, msg:Odometry):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
+        v = msg.twist.twist.linear.x
         roll, pitch, yaw = self.quart_to_rpy(
             msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         curr_state = Float32MultiArray()
-        curr_state.data = [x, y, yaw]
+        curr_state.data = [x, y, yaw, v*np.cos(yaw), v*np.sin(yaw)]
         self.curr_state_pub.publish(curr_state)
 
 if __name__ == '__main__':

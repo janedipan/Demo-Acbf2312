@@ -9,17 +9,25 @@ import numpy as np
 from visualization_msgs.msg import Marker
 import casadi as ca
 
+controller_ls = ["None", "MPC-DC", "MPC-SCBF", "MPC-DCBF", "MPC-ACBF"]
 
 def distance_global(c1, c2):
     return np.sqrt((c1[0] - c2[0]) * (c1[0] - c2[0]) + (c1[1] - c2[1]) * (c1[1] - c2[1]))
 
 
 class Local_Planner():
-    def __init__(self):
-        self.replan_period = rospy.get_param('/local_planner/replan_period', 0.05)
+    def __init__(self, controller_n:int):
+        # for replan frequency
+        self.replan_period = 1/rospy.get_param('/local_planner/mpc_frequency', 5)
+        # for control type
+        self.controller = controller_ls[controller_n]
+        rospy.logwarn('----------the controller is: {}----------'.format(self.controller))
 
         self.z = 0
-        self.N = 25
+        # self.N = 20
+        self.N  = rospy.get_param('/local_planner/pre_step', 25)
+        self.Ts = rospy.get_param('/local_planner/step_time', 0.1)
+        print(type(self.Ts), self.Ts)
         self.goal_state = np.zeros([self.N, 3])
 
         self.curr_state = None
@@ -88,19 +96,21 @@ class Local_Planner():
 
     def __curr_pose_cb(self, data):
         self.curr_pose_lock.acquire()
-        self.curr_state = np.zeros(3)
+        self.curr_state = np.zeros(5)
         self.curr_state[0] = data.data[0]
         self.curr_state[1] = data.data[1]
         self.curr_state[2] = data.data[2]
+        self.curr_state[3] = data.data[3]
+        self.curr_state[4] = data.data[4]
 
         self.curr_pose_lock.release()
 
     def __obs_cb(self, data):
         self.obstacle_lock.acquire()
         self.ob = []
-        size = int(len(data.data) / 5)
+        size = int(len(data.data) / 7)
         for i in range(size):
-            self.ob.append(np.array(data.data[5*i:5*i+5]))
+            self.ob.append(np.array(data.data[7*i:7*i+7]))
         self.obstacle_lock.release()
 
     def __global_path_cb(self, path):
@@ -237,112 +247,253 @@ class Local_Planner():
 
         opti = ca.Opti()
         # parameters for optimization
-        T = 0.1
-        #gamma_k = 0.15
+        # T = 0.2
         gamma_k = 0.3
+        safe_dist = 0.8 # for scout
 
-        v_max = 1.2
+        v_max = 1.4
         v_min = 0.1
-        omega_max = 1.5
+        omega_max = 0.8
 
-        opt_x0 = opti.parameter(3)
+        if self.controller == "None":
+            opt_x0 = opti.parameter(3)
 
-        # state variables
-        opt_states = opti.variable(self.N + 1, 3)
-        opt_controls = opti.variable(self.N, 2)
-        v = opt_controls[:, 0]
-        omega = opt_controls[:, 1]
+            # state variables
+            opt_states = opti.variable(self.N + 1, 3)
+            opt_controls = opti.variable(self.N, 2)
+            v = opt_controls[:, 0]
+            omega = opt_controls[:, 1]
 
-        def f(x_, u_): return ca.vertcat(*[u_[0] * ca.cos(x_[2]), u_[0] * ca.sin(x_[2]), u_[1]])
+            def f(x_, u_): return ca.vertcat(*[u_[0] * ca.cos(x_[2]), u_[0] * ca.sin(x_[2]), u_[1]])
 
-        def exceed_ob(ob_):
-            l_long_axis = ob_[2]
-            l_short_axis = ob_[3]
-            long_axis = np.array([np.cos(ob_[4]) * l_long_axis, np.sin(ob_[4]) * l_long_axis])
+            def exceed_ob(ob_):
+                l_long_axis = ob_[2]
+                l_short_axis = ob_[3]
+                long_axis = np.array([np.cos(ob_[4]) * l_long_axis, np.sin(ob_[4]) * l_long_axis])
 
-            ob_vec = np.array([ob_[0], ob_[1]])
-            center_vec = self.goal_state[self.N-1, :2] - ob_vec
-            dist_center = np.linalg.norm(center_vec)
-            cos_ = np.dot(center_vec, long_axis.T) / (dist_center * l_long_axis)
+                ob_vec = np.array([ob_[0], ob_[1]])
+                center_vec = self.goal_state[self.N-1, :2] - ob_vec
+                dist_center = np.linalg.norm(center_vec)
+                cos_ = np.dot(center_vec, long_axis.T) / (dist_center * l_long_axis)
 
-            if np.abs(cos_) > 0.1:
-                tan_square = 1 / (cos_ ** 2) - 1
-                d = np.sqrt((l_long_axis ** 2 * l_short_axis ** 2 * (1 + tan_square) / (
-                    l_short_axis ** 2 + l_long_axis ** 2 * tan_square)))
+                if np.abs(cos_) > 0.1:
+                    tan_square = 1 / (cos_ ** 2) - 1
+                    d = np.sqrt((l_long_axis ** 2 * l_short_axis ** 2 * (1 + tan_square) / (
+                        l_short_axis ** 2 + l_long_axis ** 2 * tan_square)))
+                else:
+                    d = l_short_axis
+
+                cross_pt = ob_vec + d * center_vec / dist_center
+
+                vec1 = self.goal_state[self.N-1, :2] - cross_pt
+                vec2 = self.curr_state[:2] - cross_pt
+                theta = np.dot(vec1.T, vec2)
+
+                return theta > 0
+
+            def h(curpos_, ob_):
+                safe_dist = 0.8 # for scout
+                # safe_dist = 0.5 # for jackal
+
+                c = ca.cos(ob_[4])
+                s = ca.sin(ob_[4])
+                a = ca.MX([ob_[2]])
+                b = ca.MX([ob_[3]])
+
+                ob_vec = ca.MX([ob_[0], ob_[1]])
+                center_vec = curpos_[:2] - ob_vec.T
+
+                dist = b * (ca.sqrt((c ** 2 / a ** 2 + s ** 2 / b ** 2) * center_vec[0] ** 2 + (s ** 2 / a ** 2 + c ** 2 / b ** 2) *
+                                    center_vec[1] ** 2 + 2 * c * s * (1 / a ** 2 - 1 / b ** 2) * center_vec[0] * center_vec[1]) - 1) - safe_dist
+                
+                return dist
+
+            def quadratic(x, A):
+                return ca.mtimes([x, A, x.T])
+
+            # init_condition
+            opti.subject_to(opt_states[0, :] == opt_x0.T)
+
+            # Position Boundaries
+            if(distance_global(self.curr_state, self.global_path[-1, :2]) > 1):
+                opti.subject_to(opti.bounded(v_min, v, v_max))
             else:
-                d = l_short_axis
+                opti.subject_to(opti.bounded(-v_min, v, v_max))
 
-            cross_pt = ob_vec + d * center_vec / dist_center
+            opti.subject_to(opti.bounded(-omega_max, omega, omega_max))
 
-            vec1 = self.goal_state[self.N-1, :2] - cross_pt
-            vec2 = self.curr_state[:2] - cross_pt
-            theta = np.dot(vec1.T, vec2)
+            # System Model constraints
+            for i in range(self.N):
+                x_next = opt_states[i, :] + self.Ts * f(opt_states[i, :], opt_controls[i, :]).T
+                opti.subject_to(opt_states[i + 1, :] == x_next)
 
-            return theta > 0
+            num_obs = int(len(self.ob)/self.N)
 
-        def h(curpos_, ob_):
-            safe_dist = 0.8 # for scout
-            # safe_dist = 0.5 # for jackal
+            # rospy.loginfo("num_obs := %d", num_obs)
 
-            c = ca.cos(ob_[4])
-            s = ca.sin(ob_[4])
-            a = ca.MX([ob_[2]])
-            b = ca.MX([ob_[3]])
+            for j in range(num_obs):
+                if not exceed_ob(self.ob[self.N*j]):
+                    for i in range(self.N-1):
+                        opti.subject_to(h(opt_states[i + 1, :], self.ob[j * self.N + i + 1]) >=
+                                        (1 - gamma_k) * h(opt_states[i, :], self.ob[j * self.N + i]))
 
-            ob_vec = ca.MX([ob_[0], ob_[1]])
-            center_vec = curpos_[:2] - ob_vec.T
+            obj = 0
+            R = np.diag([0.1, 0.05])
+            A = np.diag([0.1, 0.02])
+            for i in range(self.N):
+                Q = np.diag([1.0+0.05*i,1.0+0.05*i, 0.02+0.005*i])
+                if i < self.N-1:
+                    obj += 0.1 * quadratic(opt_states[i, :] - self.goal_state[[i]], Q) + quadratic(opt_controls[i, :], R)
+                else:
+                    obj += 0.1 * quadratic(opt_states[i, :] - self.goal_state[[i]], Q)
+            Q = np.diag([1.0,1.0, 0.02])*5
+            obj += quadratic(opt_states[self.N-1, :] - self.goal_state[[self.N-1]], Q)
 
-            dist = b * (ca.sqrt((c ** 2 / a ** 2 + s ** 2 / b ** 2) * center_vec[0] ** 2 + (s ** 2 / a ** 2 + c ** 2 / b ** 2) *
-                                center_vec[1] ** 2 + 2 * c * s * (1 / a ** 2 - 1 / b ** 2) * center_vec[0] * center_vec[1]) - 1) - safe_dist
-            
-            return dist
+            opti.minimize(obj)
+            opts_setting = {'ipopt.max_iter': 2000, 'ipopt.print_level': 0, 'print_time': 0, 'ipopt.acceptable_tol': 1e-3,
+                            'ipopt.acceptable_obj_change_tol': 1e-3}
+            opti.solver('ipopt', opts_setting)
+            opti.set_value(opt_x0, self.curr_state[:3])
 
-        def quadratic(x, A):
-            return ca.mtimes([x, A, x.T])
-
-        # init_condition
-        opti.subject_to(opt_states[0, :] == opt_x0.T)
-
-        # Position Boundaries
-        if(distance_global(self.curr_state, self.global_path[-1, :2]) > 1):
-            opti.subject_to(opti.bounded(v_min, v, v_max))
         else:
-            opti.subject_to(opti.bounded(-v_min, v, v_max))
+            print('--------------------------- janedipan\'s model ---------------------------')
+            opt_x0 = opti.parameter(5)
+            # states[x, y, theta, dx, dy]
+            opt_states = opti.variable(self.N+1, 5)
+            opt_controls = opti.variable(self.N, 2)
+            v = opt_controls[:, 0]
+            omega = opt_controls[:, 1]           
+            
+            def f(x_, u_): return ca.vertcat(*[u_[0] * ca.cos(x_[2]) * self.Ts, u_[0] * ca.sin(x_[2]) * self.Ts, u_[1] * self.Ts, 
+                                               u_[0] * ca.cos(x_[2]), u_[0] * ca.sin(x_[2])])
+            
+            def h(curpos_:ca.SX, ob_:tuple):
+                x_obs, y_obs, r_obs = ob_
+                h = ca.sqrt((x_obs-curpos_[0])**2+(y_obs-curpos_[1])**2)-(safe_dist+r_obs)
+                return h
+            
+            def h1(curpos_:ca.SX, ob_:tuple, vr_:tuple, tau_=0.0):
+                x_obs, y_obs, r_obs = ob_
+                h = ca.sqrt((x_obs-curpos_[0]+vr_[0]*tau_)**2 + (y_obs - curpos_[1]+vr_[1]*tau_)**2) - (safe_dist + r_obs)
+                return h
 
-        opti.subject_to(opti.bounded(-omega_max, omega, omega_max))
+            def exceed_ob(ob_:list):
+                case = 1
+                if case == 1:
+                    # 前进视野的障碍物
+                    ob_vec = np.array([ob_[0], ob_[1]])
+                    center_vec = self.goal_state[self.N-1, :2] - ob_vec
+                    d = np.linalg.norm(center_vec)
+                    cross_pt = ob_vec + ob_[2]/d*center_vec
+                    vec1 = self.goal_state[self.N-1, :2] - cross_pt
+                    vec2 = self.curr_state[:2] - cross_pt
 
-        # System Model constraints
-        for i in range(self.N):
-            x_next = opt_states[i, :] + T * f(opt_states[i, :], opt_controls[i, :]).T
-            opti.subject_to(opt_states[i + 1, :] == x_next)
+                    theta = np.dot(vec1.T, vec2)
+                    return theta > 0
+                elif case == 2:
+                    # 机器人周围的障碍物
+                    ob_vec = np.array([ob_[0], ob_[1]])
+                    vec1 = ob_vec - self.curr_state[:2]
+                    sign = np.linalg.norm(vec1) > 5.0
+                    return sign
+            
+            # tau值函数
+            def updata_paramter(ob_:np.ndarray) -> float: 
+                tau_ = 0.0
+                scale_list = 0.0
+                ro_p    = self.curr_state[:2]
+                ro_v    = self.curr_state[3:]
+                obs_p   = ob_[:2]
+                obs_v   = ob_[5:]
 
-        num_obs = int(len(self.ob)/self.N)
+                p_r     = obs_p - ro_p
+                v_r     = obs_v - ro_v
+                tau_max = (np.linalg.norm(p_r)-safe_dist-ob_[2])*np.linalg.norm(p_r)/(-np.dot(p_r, v_r))
+                if (np.dot(p_r, v_r) < 0.0) & (tau_max < 2.0):
+                    tau_max = min(tau_max, 0.65)
+                    obs_scale = 1-(abs(np.dot(p_r,obs_v)/np.linalg.norm(p_r)/1.5)-1)**2
+                    ro_scale = 1-(np.linalg.norm(p_r)/5-1)**2
+                    scale = obs_scale * ro_scale
+                else:
+                    scale = 0.0
+                tau_ = tau_max * scale
+                return tau_
 
-        # rospy.loginfo("num_obs := %d", num_obs)
+            def quadratic(x, A):
+                return ca.mtimes([x, A, x.T])
 
-        for j in range(num_obs):
-            if not exceed_ob(self.ob[25*j]):
-                for i in range(self.N-1):
-                    opti.subject_to(h(opt_states[i + 1, :], self.ob[j * 25 + i + 1]) >=
-                                    (1 - gamma_k) * h(opt_states[i, :], self.ob[j * 25 + i]))
+            # init_condition
+            opti.subject_to(opt_states[0, :] == opt_x0.T)
 
-        obj = 0
-        R = np.diag([0.1, 0.05])
-        A = np.diag([0.1, 0.02])
-        for i in range(self.N):
-            Q = np.diag([1.0+0.05*i,1.0+0.05*i, 0.02+0.005*i])
-            if i < self.N-1:
-                obj += 0.1 * quadratic(opt_states[i, :] - self.goal_state[[i]], Q) + quadratic(opt_controls[i, :], R)
+            # Position Boundaries
+            if(distance_global(self.curr_state, self.global_path[-1, :2]) > 1):
+                opti.subject_to(opti.bounded(v_min, v, v_max))
             else:
-                obj += 0.1 * quadratic(opt_states[i, :] - self.goal_state[[i]], Q)
-        Q = np.diag([1.0,1.0, 0.02])*5
-        obj += quadratic(opt_states[self.N-1, :] - self.goal_state[[self.N-1]], Q)
+                opti.subject_to(opti.bounded(-v_min, v, v_max))
 
-        opti.minimize(obj)
-        opts_setting = {'ipopt.max_iter': 2000, 'ipopt.print_level': 0, 'print_time': 0, 'ipopt.acceptable_tol': 1e-3,
-                        'ipopt.acceptable_obj_change_tol': 1e-3}
-        opti.solver('ipopt', opts_setting)
-        opti.set_value(opt_x0, self.curr_state)
+            opti.subject_to(opti.bounded(-omega_max, omega, omega_max))
+
+            # System Model constraints
+            fa = np.zeros([5,5])
+            fa[:3, :3] = np.eye(3) 
+            for i in range(self.N):
+                x_next = opt_states[i, :]@fa + f(opt_states[i, :], opt_controls[i, :]).T
+                opti.subject_to(opt_states[i + 1, :] == x_next)
+
+            num_obs = int(len(self.ob)/self.N)
+
+            # rospy.loginfo("num_obs := %d", num_obs)
+            # Safety constraint
+            for j in range(num_obs):
+                if not exceed_ob(self.ob[self.N*j]):
+                    # 仅根据当前机器人，障碍物当前状态进行tau值计算～待验证
+                    if self.controller == "MPC-ACBF":
+                        tau = updata_paramter(self.ob[self.N*j])
+                    vr = self.ob[self.N*j][5:] - self.curr_state[3:]
+                    for i in range(self.N-1):
+                        # self.ob[] -> [x, y, a, b, theta, dx, dy]
+                        obs     = (self.ob[j*self.N+i][0], self.ob[j*self.N+i][1], self.ob[j*self.N+i][2])
+                        obs1    = (self.ob[j*self.N+i+1][0], self.ob[j*self.N+i+1][1], self.ob[j*self.N+i+1][2])
+                        if self.controller == "MPC-DC":
+                            hk      = h(opt_states[i, :], obs)
+                            opti.subject_to(hk>=0)
+                        elif self.controller == "MPC-SCBF":
+                            hk      = h(opt_states[i, :], obs)
+                            hk1     = h(opt_states[i+1,:], obs)
+                            st_cbf  = -hk1 + (1-gamma_k)*hk
+                            opti.subject_to(st_cbf<=0)
+                        elif self.controller == "MPC-DCBF":
+                            hk      = h(opt_states[i, :], obs)
+                            hk1     = h(opt_states[i+1,:], obs1)
+                            st_cbf  = -hk1 + (1-gamma_k)*hk
+                            opti.subject_to(st_cbf<=0)
+                        elif self.controller == "MPC-ACBF":
+                            tau = 0.0
+                            hk      = h1(opt_states[i, :], obs, vr, tau)
+                            hk1      = h1(opt_states[i+1, :], obs1, vr, tau)
+                            st_cbf  = -hk1 + (1-gamma_k)*hk
+                            opti.subject_to(st_cbf<=0)
+                        else:
+                            print('-----------------------error----------------------')
+        
+            # Object function
+            obj = 0
+            R = np.diag([0.1, 0.05])
+            A = np.diag([0.1, 0.02])
+            for i in range(self.N):
+                Q = np.diag([1.0+0.05*i,1.0+0.05*i, 0.02+0.005*i])
+                if i < self.N-1:
+                    obj += 0.1 * quadratic(opt_states[i, :3] - self.goal_state[[i]], Q) + quadratic(opt_controls[i, :], R)
+                else:
+                    obj += 0.1 * quadratic(opt_states[i, :3] - self.goal_state[[i]], Q)
+            Q = np.diag([1.0,1.0, 0.02])*5
+            obj += quadratic(opt_states[self.N-1, :3] - self.goal_state[[self.N-1]], Q)
+
+            opti.minimize(obj)
+            opts_setting = {'ipopt.max_iter': 2000, 'ipopt.print_level': 0, 'print_time': 0, 'ipopt.acceptable_tol': 1e-3,
+                            'ipopt.acceptable_obj_change_tol': 1e-3}
+            opti.solver('ipopt', opts_setting)
+            opti.set_value(opt_x0, self.curr_state)
 
         try:
             sol = opti.solve()
@@ -374,6 +525,7 @@ class Local_Planner():
 
 if __name__ == '__main__':
     rospy.init_node("phri_planner")
-    phri_planner = Local_Planner()
+    controller_n = rospy.get_param('/local_planner/controller_type', 0) # 需要添加前缀
+    phri_planner = Local_Planner(controller_n)
 
     rospy.spin()

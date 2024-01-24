@@ -43,6 +43,8 @@ public:
   void init(ros::NodeHandle &nh)   // Obs_Manager初始化
   {
     nh.param("obs_manager/use_GroundTruth", is_use_GroundTruth, true);
+    nh.param("obs_Manager_node/pre_step_", pre_step, 25);
+    nh.param("obs_Manager_node/step_time_", step_time, 0.1);
 
     // 使用障碍物轨迹真值或障碍物预测轨迹
     if (is_use_GroundTruth) {
@@ -106,8 +108,8 @@ public:
                         traj_iter->second.coeff_x[1] * time_now/5.0 + traj_iter->second.coeff_x[2];
         cur_posVel[1] = traj_iter->second.coeff_y[0] * pow(time_now/5.0, 2) +
                         traj_iter->second.coeff_y[1] * time_now/5.0 + traj_iter->second.coeff_y[2];
-        cur_posVel[2] = 2.0 * traj_iter->second.coeff_x[0] * time_now / 25.0 + traj_iter->second.coeff_x[1];
-        cur_posVel[3] = 2.0 * traj_iter->second.coeff_y[0] * time_now / 25.0 + traj_iter->second.coeff_y[1];
+        cur_posVel[2] = 2.0 * traj_iter->second.coeff_x[0] * time_now / 25.0 + traj_iter->second.coeff_x[1] / 5;
+        cur_posVel[3] = 2.0 * traj_iter->second.coeff_y[0] * time_now / 25.0 + traj_iter->second.coeff_y[1] / 5;
         posVel_list.push_back(cur_posVel);
         radius_lists.push_back(traj_iter->second.circle_R_);
       }
@@ -205,6 +207,9 @@ private:
 
   ros::Timer show_timer;
 
+  int pre_step;
+  double step_time;
+
   std::unordered_map<int, obstacle_traj> obstalce_trajs_;         // 所有障碍物轨迹，哈希表形式存储
 
   void showObs_callback(const ros::TimerEvent& e)         // 定时器回调，定时更新障碍物显示
@@ -259,12 +264,14 @@ private:
     if(obstalce_trajs_.size() == 0) return; // 没有障碍物轨迹，返回
 
     std_msgs::Float32MultiArray dcbf_msgs;
+    std_msgs::Float32MultiArray acbf_msgs;
     ros::Time time_now = ros::Time::now();
 
-    int N_ = 25;                        // mpc预测步长，需与清华mpc-dcbf参数保持一致
-    double delta_t_ = 0.10;             // mpc离散时间，需与清华mpc-dcbf参数保持一致
+    int N_ = pre_step;                        // mpc预测步长，需与清华mpc-dcbf参数保持一致
+    double delta_t_ = step_time;             // mpc离散时间，需与清华mpc-dcbf参数保持一致
 
     dcbf_msgs.data.resize(5 * N_ * get_obs_size()); // 给障碍物矩阵分配内存
+    acbf_msgs.data.resize(7 * N_ * get_obs_size());
 
     for (int i = 0; i < N_; i++) {                // 预测第i步
       double add_time = (double)(i * delta_t_);
@@ -279,9 +286,18 @@ private:
         dcbf_msgs.data[ 5 * N_ * j + 5 * i + 2 ] = radius_list[j];      // 椭圆半长轴a
         dcbf_msgs.data[ 5 * N_ * j + 5 * i + 3 ] = radius_list[j];      // 椭圆半短轴b
         dcbf_msgs.data[ 5 * N_ * j + 5 * i + 4 ] = 0.0;                 // 椭圆方位角theta
+        // for janedipan_test
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 0 ] = posVel_list[j].x();  // x坐标
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 1 ] = posVel_list[j].y();  // y坐标
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 2 ] = radius_list[j];      // 椭圆半长轴a
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 3 ] = radius_list[j];      // 椭圆半短轴b
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 4 ] = 0.0;                 // 椭圆方位角theta
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 5 ] = posVel_list[j].z();                 
+        acbf_msgs.data[ 7 * N_ * j + 7 * i + 6 ] = posVel_list[j].w();                 
       }
     }
-    dcbfTraj_pub.publish(dcbf_msgs);
+    // 可以添加一个符号标志
+    dcbfTraj_pub.publish(acbf_msgs);
   }
 
   void pub_TEB_traj() {

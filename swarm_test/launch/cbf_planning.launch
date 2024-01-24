@@ -1,6 +1,11 @@
 <launch>
 
   <param name="/use_sim_time" value="false"/>
+  <!-- can choose None 0, MPC-DC 1, MPC-SCBF 2, MPC-DCBF 3, MPC-ACBF 4 -->
+  <arg name="controller" value="3" />
+  <arg name="mpc_frequency" value="5" />
+  <arg name="pre_step" value="20" />
+  <arg name="step_time" value="0.2" />
 
   <arg name="map_size_x" default="50.0"/>
   <arg name="map_size_y" default="50.0"/>
@@ -40,6 +45,8 @@
     <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
     <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
     <param name="/obs_manager/use_GroundTruth"  value="true" type="bool"/>
+    <param name="pre_step_" value="$(arg pre_step)" />
+    <param name="step_time_" value="$(arg step_time)"/>
   </node>
 
   <!-- 走廊可视化 -->
@@ -63,6 +70,10 @@
 
   <!-- MPC-D-CBF规划-->
   <include file="$(find mpc_dcbf)/launch/mpc_dcbf.launch">
+    <arg name="controller_" value="$(arg controller)"/>
+    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
+    <arg name="pre_step_" value="$(arg pre_step)" />
+    <arg name="step_time_" value="$(arg step_time)" />
   </include>
 
   <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/dcbf_plan.rviz" />
