@@ -94,7 +94,7 @@ Visualization Manager:
           Marker Topic: /robot_mesh1
           Name: Marker
           Namespaces:
-            {}
+            ugv_mesh: true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -102,7 +102,7 @@ Visualization Manager:
           Marker Topic: /robot_mesh2
           Name: Marker
           Namespaces:
-            {}
+            ugv_mesh: true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -110,7 +110,7 @@ Visualization Manager:
           Marker Topic: /robot_mesh3
           Name: Marker
           Namespaces:
-            {}
+            ugv_mesh: true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -118,10 +118,10 @@ Visualization Manager:
           Marker Topic: /robot_mesh4
           Name: Marker
           Namespaces:
-            {}
+            ugv_mesh: true
           Queue Size: 100
           Value: true
-      Enabled: false
+      Enabled: true
       Name: robot_mesh
     - Class: rviz/Group
       Displays:
@@ -130,7 +130,7 @@ Visualization Manager:
           Marker Topic: /odom_traj1
           Name: MarkerArray
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -138,7 +138,7 @@ Visualization Manager:
           Marker Topic: /odom_traj2
           Name: MarkerArray
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -146,7 +146,7 @@ Visualization Manager:
           Marker Topic: /odom_traj3
           Name: MarkerArray
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -154,10 +154,10 @@ Visualization Manager:
           Marker Topic: /odom_traj4
           Name: MarkerArray
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
-      Enabled: false
+      Enabled: true
       Name: odom_trajs
     - Class: rviz/Group
       Displays:

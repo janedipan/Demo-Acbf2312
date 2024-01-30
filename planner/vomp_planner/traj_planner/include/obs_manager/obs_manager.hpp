@@ -43,8 +43,8 @@ public:
   void init(ros::NodeHandle &nh)   // Obs_Manager初始化
   {
     nh.param("obs_manager/use_GroundTruth", is_use_GroundTruth, true);
-    nh.param("obs_Manager_node/pre_step_", pre_step, 25);
-    nh.param("obs_Manager_node/step_time_", step_time, 0.1);
+    nh.param("/obs_Manager_node/pre_step_", pre_step, 25);
+    nh.param("/obs_Manager_node/step_time_", step_time, 0.1);
 
     // 使用障碍物轨迹真值或障碍物预测轨迹
     if (is_use_GroundTruth) {
@@ -96,6 +96,7 @@ public:
     else
     {
       // 遍历轨迹容器，根据时间返回可用的障碍物位置
+      // 多项式拟合轨迹
       for (auto traj_iter = obstalce_trajs_.begin(); traj_iter != obstalce_trajs_.end(); traj_iter++) {
 
         if ( cur_time.toSec() > traj_iter->second.Time1 - 0.05 ) {  // 超时的无用障碍物轨迹，删除并跳过
@@ -269,6 +270,8 @@ private:
 
     int N_ = pre_step;                        // mpc预测步长，需与清华mpc-dcbf参数保持一致
     double delta_t_ = step_time;             // mpc离散时间，需与清华mpc-dcbf参数保持一致
+    // std::cout<<"pre_step is:"<< N_<< std::endl;
+    // std::cout<<"delta_time is:"<< delta_t_<< std::endl;
 
     dcbf_msgs.data.resize(5 * N_ * get_obs_size()); // 给障碍物矩阵分配内存
     acbf_msgs.data.resize(7 * N_ * get_obs_size());

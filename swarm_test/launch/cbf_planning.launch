@@ -4,8 +4,8 @@
   <!-- can choose None 0, MPC-DC 1, MPC-SCBF 2, MPC-DCBF 3, MPC-ACBF 4 -->
   <arg name="controller" value="3" />
   <arg name="mpc_frequency" value="5" />
-  <arg name="pre_step" value="20" />
-  <arg name="step_time" value="0.2" />
+  <arg name="pre_step" value="25" />
+  <arg name="step_time" value="0.1" />
 
   <arg name="map_size_x" default="50.0"/>
   <arg name="map_size_y" default="50.0"/>

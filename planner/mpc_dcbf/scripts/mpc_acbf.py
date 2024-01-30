@@ -27,9 +27,8 @@ class Local_Planner():
         # self.N = 20
         self.N  = rospy.get_param('/local_planner/pre_step', 25)
         self.Ts = rospy.get_param('/local_planner/step_time', 0.1)
-        print(type(self.Ts), self.Ts)
-        self.goal_state = np.zeros([self.N, 3])
 
+        self.goal_state = np.zeros([self.N, 3])
         self.curr_state = None
         self.global_path = None
 
@@ -50,7 +49,7 @@ class Local_Planner():
 
         self.__sub_curr_state = rospy.Subscriber('/curr_state', Float32MultiArray, self.__curr_pose_cb, queue_size=10)
 
-        self.__sub_obs = rospy.Subscriber('/obs_Manager_node/obs_predict_pub', Float32MultiArray, self.__obs_cb, queue_size=10)
+        self.__sub_obs = rospy.Subscriber('/obs_Manager_node/obs_predict_pub', Float32MultiArray, self.__obs_cb, queue_size=100)
 
         self.__sub_goal = rospy.Subscriber('/global_path', Path, self.__global_path_cb, queue_size=25)
 
@@ -251,7 +250,7 @@ class Local_Planner():
         gamma_k = 0.3
         safe_dist = 0.8 # for scout
 
-        v_max = 1.4
+        v_max = 1.3
         v_min = 0.1
         omega_max = 0.8
 
@@ -377,6 +376,7 @@ class Local_Planner():
                 h = ca.sqrt((x_obs-curpos_[0]+vr_[0]*tau_)**2 + (y_obs - curpos_[1]+vr_[1]*tau_)**2) - (safe_dist + r_obs)
                 return h
 
+            # 障碍物筛选函数
             def exceed_ob(ob_:list):
                 case = 1
                 if case == 1:
@@ -385,6 +385,7 @@ class Local_Planner():
                     center_vec = self.goal_state[self.N-1, :2] - ob_vec
                     d = np.linalg.norm(center_vec)
                     cross_pt = ob_vec + ob_[2]/d*center_vec
+                    # cross_pt = ob_vec
                     vec1 = self.goal_state[self.N-1, :2] - cross_pt
                     vec2 = self.curr_state[:2] - cross_pt
 
@@ -445,15 +446,18 @@ class Local_Planner():
             # rospy.loginfo("num_obs := %d", num_obs)
             # Safety constraint
             for j in range(num_obs):
+                # print(j)
+                # print(self.ob[self.N*j])
                 if not exceed_ob(self.ob[self.N*j]):
+                    print('choose obs{}'.format(j))
                     # 仅根据当前机器人，障碍物当前状态进行tau值计算～待验证
                     if self.controller == "MPC-ACBF":
                         tau = updata_paramter(self.ob[self.N*j])
+                        print(tau)
                     vr = self.ob[self.N*j][5:] - self.curr_state[3:]
+                    obs = (self.ob[self.N*j][0], self.ob[self.N*j][1], self.ob[self.N*j][2])
                     for i in range(self.N-1):
                         # self.ob[] -> [x, y, a, b, theta, dx, dy]
-                        obs     = (self.ob[j*self.N+i][0], self.ob[j*self.N+i][1], self.ob[j*self.N+i][2])
-                        obs1    = (self.ob[j*self.N+i+1][0], self.ob[j*self.N+i+1][1], self.ob[j*self.N+i+1][2])
                         if self.controller == "MPC-DC":
                             hk      = h(opt_states[i, :], obs)
                             opti.subject_to(hk>=0)
@@ -463,14 +467,17 @@ class Local_Planner():
                             st_cbf  = -hk1 + (1-gamma_k)*hk
                             opti.subject_to(st_cbf<=0)
                         elif self.controller == "MPC-DCBF":
+                            obs     = (self.ob[j*self.N+i][0], self.ob[j*self.N+i][1], self.ob[j*self.N+i][2])
+                            # obs1    = (self.ob[j*self.N+i+1][0], self.ob[j*self.N+i+1][1], self.ob[j*self.N+i+1][2])
                             hk      = h(opt_states[i, :], obs)
-                            hk1     = h(opt_states[i+1,:], obs1)
+                            hk1     = h(opt_states[i+1,:], obs)
                             st_cbf  = -hk1 + (1-gamma_k)*hk
                             opti.subject_to(st_cbf<=0)
                         elif self.controller == "MPC-ACBF":
-                            tau = 0.0
+                            obs     = (self.ob[j*self.N+i][0], self.ob[j*self.N+i][1], self.ob[j*self.N+i][2])
+                            # tau = 0.0
                             hk      = h1(opt_states[i, :], obs, vr, tau)
-                            hk1      = h1(opt_states[i+1, :], obs1, vr, tau)
+                            hk1      = h1(opt_states[i+1, :], obs, vr, tau)
                             st_cbf  = -hk1 + (1-gamma_k)*hk
                             opti.subject_to(st_cbf<=0)
                         else:

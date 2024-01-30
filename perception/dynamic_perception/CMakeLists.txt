@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   jsk_recognition_msgs
   autoware_msgs
-  obsdet_msgs
+  # obsdet_msgs
   dynamic_simulator
   message_generation
   message_runtime
@@ -30,6 +30,10 @@ find_package(CASADI REQUIRED)
 include_directories( ${CASADI_INCLUDE_DIR} )
 
 set(CMAKE_CXX_FLAGS "-O2 -Wall ${CMAKE_CXX_FLAGS}")
+
+generate_dynamic_reconfigure_options(
+  cfg/ri_dbscan.cfg
+)
 
 add_message_files(
   FILES
@@ -51,7 +55,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ri_dbscan
-  CATKIN_DEPENDS roscpp std_msgs pcl_ros obsdet_msgs
+  CATKIN_DEPENDS roscpp std_msgs pcl_ros 
   geometry_msgs
   jsk_recognition_msgs
   message_runtime

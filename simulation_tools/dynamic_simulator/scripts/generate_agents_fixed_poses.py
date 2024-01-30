@@ -25,7 +25,7 @@ class DynCorridor:
 
         self.obstacle_params = obstacle_params
         self.total_num_obs=len(obstacle_params)
-        self.bbox_dynamic =[0.3, 0.3, 1.5]    # 障碍物的尺寸大小
+        self.bbox_dynamic =[0.6, 0.6, 1.5]    # 障碍物的尺寸大小
         self.name_obs="obs_"
         self.available_meshes_dynamic=["package://dynamic_simulator/meshes/ConcreteDamage01b/model4.dae"]
         self.marker_array=MarkerArray()

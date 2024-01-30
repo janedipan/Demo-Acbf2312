@@ -11,7 +11,7 @@ bool is_odom_rcv_, is_target_rcv_;
 
 Eigen::Vector2d start_pos, target_pos;
 
-double v_max = 1.4;
+double v_max = 1.3;
 double step_time;
 
 void odomCallback(const nav_msgs::Odometry& msg) 
@@ -39,8 +39,8 @@ void globalPathPub_Callback(const ros::TimerEvent& e) {
   double dist = (target_pos - start_pos).norm();
   Eigen::Vector2d diff = (target_pos - start_pos) / dist;
 
-  const double step = 0.28;   // = v_max * Ts
-  // const double step = v_max*step_time;   // = v_max * Ts
+  // const double step = 0.28;   // = v_max * Ts
+  const double step = v_max*step_time;   // = v_max * Ts
 
   nav_msgs::Path global_path;
   global_path.header.stamp = ros::Time::now();
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
   global_path_pub = node.advertise<nav_msgs::Path>("/global_path", 1);
 
-  ros::Timer global_path_timer = node.createTimer(ros::Duration(0.10), globalPathPub_Callback);  // 定时碰撞检查
+  ros::Timer global_path_timer = node.createTimer(ros::Duration(0.4), globalPathPub_Callback);  // 定时碰撞检查
 
   ros::Duration(1.0).sleep();
 
