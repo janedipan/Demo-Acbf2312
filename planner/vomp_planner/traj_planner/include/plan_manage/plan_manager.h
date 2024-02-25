@@ -22,10 +22,13 @@ public:
   /* main planning interface */
   bool hybridReplan(Eigen::Vector2d start_pt, Eigen::Vector2d start_vel, Eigen::Vector2d start_acc,
                     Eigen::Vector2d end_pt, Eigen::Vector2d end_vel, double start_yaw);
+  bool hybridReplanAdsm(Eigen::Vector2d start_pt, Eigen::Vector2d start_vel, Eigen::Vector2d start_acc,
+                    Eigen::Vector2d end_pt, Eigen::Vector2d end_vel, double start_yaw);
 
   void callTrajOptimize();
 
   void initPlanModules(ros::NodeHandle& nh);
+  void initPlanManage(ros::NodeHandle& nh);
 
   ros::Time get_startTime(){ return start_time_; }
 
@@ -74,6 +77,13 @@ public:
       vis_pathmsg.poses.push_back(pose);
     }
     KinopathPub.publish(vis_pathmsg);
+  }
+
+  std::vector<Eigen::Vector2d> getGlobalPath(double step_time)
+  {
+    std::vector<Eigen::Vector2d> trajlist;
+    trajlist = theta_path_finder_->getKinoTraj(step_time);
+    return trajlist;
   }
 
   void drawBspline(NonUniformBspline& bspline){

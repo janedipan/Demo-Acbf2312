@@ -69,6 +69,7 @@ public:
   {
     if (is_use_GroundTruth)
     {
+      // 使用真值
       // 遍历轨迹容器，根据时间返回可用的障碍物位置
       for (auto traj_iter = obstalce_trajs_.begin(); traj_iter != obstalce_trajs_.end(); traj_iter++) {
 
@@ -344,6 +345,7 @@ private:
     tebTraj_pub.publish(obs_Array);
   }
 
+  // 使用障碍物轨迹真值
   void obsTrajCallback(const dynamic_simulator::DynTraj& msg)     // 接收障碍物真值轨迹的回调函数
   {
     obstacle_traj tmp_obs;    // 将障碍物消息转为vo_obstacle格式
@@ -399,6 +401,7 @@ private:
     pub_TEB_traj();
   }
 
+  // 动态感知得出障碍物预测轨迹
   void predict_Traj_Callback(const dynamic_simulator::DynTraj& msg)     // 接收障碍物预测轨迹的回调函数
   {
     obstacle_traj tmp_obs;    // 将障碍物消息转为vo_obstacle格式

@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
   global_path_pub = node.advertise<nav_msgs::Path>("/global_path", 1);
 
-  ros::Timer global_path_timer = node.createTimer(ros::Duration(0.4), globalPathPub_Callback);  // 定时碰撞检查
+  ros::Timer global_path_timer = node.createTimer(ros::Duration(0.2), globalPathPub_Callback);  // 定时碰撞检查
 
   ros::Duration(1.0).sleep();
 

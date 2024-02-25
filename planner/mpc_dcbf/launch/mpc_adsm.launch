@@ -1,0 +1,27 @@
+<launch>
+    <arg name="controller_" />
+    <arg name="mpc_frequency_" />
+    <arg name="pre_step_" />
+    <arg name="step_time_" />
+
+    <!-- 全局规划 -->
+    <!-- <node name="global_path_pub" pkg="mpc_dcbf" type="global_path_pub"/> -->
+    <!-- <node name="global_path_by_rviz" pkg="mpc_dcbf" type="global_path_by_rviz" >
+        <param name="step_time" value="$(arg step_time_)" />
+    </node> -->
+
+    <!-- 清华大学mpc_dcbf局部规划 -->
+    <node name="local_planner" pkg="mpc_dcbf" type="mpc_acbf.py" output="screen">
+        <param name="controller_type" value="$(arg controller_)" />
+        <param name="mpc_frequency" value="$(arg mpc_frequency_)" />
+        <param name="pre_step" value="$(arg pre_step_)" />
+        <param name="step_time" value="$(arg step_time_)" />
+    </node>
+    <!-- <node name="local_planner" pkg="mpc_dcbf" type="mpc_dcbf_soft.py" output="screen"/> -->
+
+    <!-- 控制指令 -->
+    <node name="controller" pkg="mpc_dcbf" type="controller.py">
+        <remap from="/cmd_vel" to="/mpc/cmd_vel" />
+    </node>
+
+</launch>

@@ -66,3 +66,16 @@ target_link_libraries( obs_Manager_node
   ${PCL_LIBRARIES}
   ${EIGEN3_INCLUDE_DIR}
 )
+
+add_executable( global_path_by_adsm
+    example/global_path_by_adsm.cpp
+    src/theta_astar.cpp
+    src/bspline_opt.cpp
+    src/plan_manager.cpp
+)
+target_link_libraries( global_path_by_adsm
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${EIGEN3_INCLUDE_DIR}
+  nlopt
+)

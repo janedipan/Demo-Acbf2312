@@ -477,7 +477,7 @@ class Local_Planner():
                             obs     = (self.ob[j*self.N+i][0], self.ob[j*self.N+i][1], self.ob[j*self.N+i][2])
                             # tau = 0.0
                             hk      = h1(opt_states[i, :], obs, vr, tau)
-                            hk1      = h1(opt_states[i+1, :], obs, vr, tau)
+                            hk1     = h1(opt_states[i+1, :], obs, vr, tau)
                             st_cbf  = -hk1 + (1-gamma_k)*hk
                             opti.subject_to(st_cbf<=0)
                         else:

@@ -19,7 +19,7 @@ void DynamicReplanFSM::init(ros::NodeHandle& nh){
   planner_manager_.reset(new PlanManager);
   planner_manager_->initPlanModules(nh);
 
-  /* callback */
+  /* 状态机更新callback */
   exec_timer_   = nh.createTimer(ros::Duration(0.02), &DynamicReplanFSM::execFSMCallback, this);
   
   // 定时器：发布参考轨迹给mpc
