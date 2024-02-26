@@ -126,7 +126,7 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
     cur_node->node_state = IN_CLOSE_SET;
     iter_num_ += 1;
 
-    double res = 1 / 4.0, time_res = 1 / 1.0, time_res_init = 1 / 20.0; // 搜索扩展分辨率
+    double res = 1 / 4.0, time_res = 1 / 1.0, time_res_init = 1 / 20.0; // 搜索扩展分辨率:加速度，时间，初始时间
 
     Eigen::Matrix<double, 5, 1> cur_state = cur_node->state_car;
     Eigen::Matrix<double, 5, 1> pro_state;
@@ -145,7 +145,7 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
     }
     else
     {
-      double max_acc_y_ = max_acc_ * 0.5;
+      double max_acc_y_ = max_acc_ * 0.8;
       for (double ax = -max_acc_; ax <= max_acc_ + 1e-3; ax += max_acc_ * res)
         for (double ay = -max_acc_y_; ay <= max_acc_y_ + 1e-3; ay += max_acc_y_ * res)
           {

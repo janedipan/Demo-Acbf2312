@@ -41,14 +41,14 @@
         <param name="manager/init_traj_sample_time"   value="0.4" type="double"/>
 
         <!-- kinodynamic path searching -->
-        <param name="search/max_tau"            value="0.5" type="double"/>
+        <param name="search/max_tau"            value="0.6" type="double"/>
         <param name="search/init_max_tau"       value="1.0" type="double"/>
-        <param name="search/max_vel"            value="1.2" type="double"/>
-        <param name="search/max_acc"            value="1.0" type="double"/>
+        <param name="search/max_vel"            value="1.5" type="double"/>
+        <param name="search/max_acc"            value="2.0" type="double"/>
         <param name="search/omega_max"          value="0.8" type="double"/>
         <param name="search/w_time"             value="10.0" type="double"/>
-        <param name="search/horizon"            value="10.0" type="double"/>
-        <param name="search/lambda_heu"         value="1000.0" type="double"/>
+        <param name="search/horizon"            value="6.0" type="double"/>
+        <param name="search/lambda_heu"         value="10000.0" type="double"/>
         <param name="search/resolution_astar"   value="0.1" type="double"/>
         <param name="search/time_resolution"    value="0.8" type="double"/>
         <param name="search/margin"             value="0.2" type="double"/>

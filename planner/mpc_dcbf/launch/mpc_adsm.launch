@@ -21,7 +21,7 @@
 
     <!-- 控制指令 -->
     <node name="controller" pkg="mpc_dcbf" type="controller.py">
-        <remap from="/cmd_vel" to="/mpc/cmd_vel" />
+        <remap from="/cmd_vel" to="/cmd_vel" />
     </node>
 
 </launch>

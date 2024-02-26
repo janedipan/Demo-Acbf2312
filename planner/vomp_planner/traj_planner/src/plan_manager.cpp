@@ -105,15 +105,15 @@ bool PlanManager::hybridReplanAdsm(Eigen::Vector2d start_pt, Eigen::Vector2d sta
   search_time_start = clock();           //开始时间
 
   theta_path_finder_->reset();
-  theta_path_finder_->set_IsConsiderVO(true);
-  status_ = theta_path_finder_->search(start_pt, start_vel, start_acc, start_yaw, end_pt, end_vel, true, true, -1.0); // 带theta的kino astar
+  // theta_path_finder_->set_IsConsiderVO(false);
+  status_ = theta_path_finder_->search(start_pt, start_vel, start_acc, start_yaw, end_pt, end_vel, false, true, -1.0); // 带theta的kino astar
 
   // TODO1: 搜索失败不一定要退出！保留之前规划的路径点，继续优化并执行
   // 可以把前端路径直接参数化为B样条保存下来，后面直接根据B样条去拿点给B样条重新参数化和优化
   if (status_ == NO_PATH) {   // 搜索失败，返回false退出
     theta_path_finder_->reset();
-    theta_path_finder_->set_IsConsiderVO(false);    // 再尝试一下使用距离指标搜索路径
-    status_ = theta_path_finder_->search(start_pt, start_vel, start_acc, start_yaw, end_pt, end_vel, true, true, -1.0);
+    // theta_path_finder_->set_IsConsiderVO(false);    // 再尝试一下使用距离指标搜索路径
+    status_ = theta_path_finder_->search(start_pt, start_vel, start_acc, start_yaw, end_pt, end_vel, false, true, -1.0);
 
     if (status_ == NO_PATH) {   // 搜索失败，返回false退出
       std::cout << "[PlanManager replan]: Can't find path." << std::endl;

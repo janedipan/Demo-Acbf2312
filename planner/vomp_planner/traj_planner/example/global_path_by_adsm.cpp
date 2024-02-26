@@ -13,6 +13,7 @@ ros::Publisher mpc_traj_pub_;
 nav_msgs::Odometry odom_;
 bool is_odom_rcv_, is_target_rcv_;
 bool plan_success;
+std::vector<Eigen::Vector2d> trajlist;
 
 double start_yaw_;                                  // 记录yaw规划的起点
 Eigen::Vector2d start_pt_, start_vel_, start_acc_;  // start state
@@ -36,7 +37,7 @@ void odomCallback(const nav_msgs::Odometry& msg)
 
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y;
     // 根据yaw角给定一个初始速度-用于路径搜索
-    double init_vel = 0.1;
+    double init_vel = 1.2;
     start_vel_ << init_vel * cos(start_yaw_), init_vel * sin(start_yaw_);    
     start_acc_.setZero();
 
@@ -64,17 +65,23 @@ void globalPathReplan_Callback(const ros::TimerEvent& e)
   double plan_time_spend = double(clock() - plan_time_start) / CLOCKS_PER_SEC;
   std::cout << "plan_time_spend:= " << plan_time_spend << std::endl;
   
-  if(!plan_success){
-    std::cout<< "global_path plan failed!"<< std::endl;
+  if(plan_success){
+    // std::cout<< "global_path plan failed!"<< std::endl;
+    trajlist.clear();
+    trajlist = planner_manager_.getGlobalPath(step_time);
   } 
+  else{
+    std::cout<< "plan failed!" << std::endl;
+  }
+  
 } 
 
 void globalPathPub_Callback(const ros::TimerEvent& e) 
 {
-  if (!plan_success) return;
-  std::vector<Eigen::Vector2d> trajlist = planner_manager_.getGlobalPath(step_time);
+  
+  // std::vector<Eigen::Vector2d> trajlist = planner_manager_.getGlobalPath(step_time);
   int num = static_cast<int>(trajlist.size());
-
+  if (num == 0) return;
   nav_msgs::Path global_path;
   global_path.header.stamp = ros::Time::now();
   global_path.header.frame_id = "world";
@@ -108,10 +115,10 @@ int main(int argc, char** argv){
 
     odom_sub      = nh.subscribe("/odometry", 50, odomCallback);
     waypoint_sub_ = nh.subscribe("/move_base_simple/goal", 1, waypointCallback);
-    mpc_traj_pub_ = nh.advertise<nav_msgs::Path>("/global_path", 1);
+    mpc_traj_pub_ = nh.advertise<nav_msgs::Path>("/global_path", 20);
     
     ros::Timer replan_timer = nh.createTimer(ros::Duration(0.1), globalPathReplan_Callback);      // 定时全局路径搜索
-    ros::Timer globbal_path_timer = nh.createTimer(ros::Duration(0.05), globalPathPub_Callback);  // 定时全局路径发布
+    ros::Timer globbal_path_timer = nh.createTimer(ros::Duration(0.1), globalPathPub_Callback);   // 定时全局路径发布
 
     ros::Duration(1.0).sleep();
     ROS_WARN("[Test_demo]: ready");
