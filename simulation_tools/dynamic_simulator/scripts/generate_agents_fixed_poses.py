@@ -12,6 +12,8 @@ from dynamic_simulator.msg import DynTraj
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
+box_size = 0.5   # 障碍物半径
+
 class DynCorridor:
 
     def __init__(self, gazebo, obstacle_params):
@@ -25,7 +27,7 @@ class DynCorridor:
 
         self.obstacle_params = obstacle_params
         self.total_num_obs=len(obstacle_params)
-        self.bbox_dynamic =[0.6, 0.6, 1.5]    # 障碍物的尺寸大小
+        self.bbox_dynamic =[box_size, box_size, 1.5]    # 障碍物的尺寸大小
         self.name_obs="obs_"
         self.available_meshes_dynamic=["package://dynamic_simulator/meshes/ConcreteDamage01b/model4.dae"]
         self.marker_array=MarkerArray()

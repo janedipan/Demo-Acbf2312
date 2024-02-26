@@ -237,9 +237,6 @@ private:
     obs_ball.color.r = 0.00f;
     obs_ball.color.g = 0.50f;
     obs_ball.color.b = 0.80f;
-    obs_ball.scale.x = 0.5;
-    obs_ball.scale.y = 0.5;
-    obs_ball.scale.z = 0.5;
     obs_ball.pose.orientation.w = 1.0;
 
     for (double add_time = 0.0; add_time < 2.0; add_time += 0.1) {
@@ -249,13 +246,15 @@ private:
       std::vector<double> radius_list;            // 获取当前时间的障碍物半径
 
       get_obs_state(time_index, posVel_list, radius_list);
-
       for (int i = 0; i < posVel_list.size(); i++) {
         geometry_msgs::Point p;
         p.x = posVel_list[i].x();
         p.y = posVel_list[i].y();
         p.z = 0.25;
         obs_ball.points.push_back(p);
+        obs_ball.scale.x = radius_list[i]*2;
+        obs_ball.scale.y = radius_list[i]*2;
+        obs_ball.scale.z = radius_list[i]*2;
       }
       obs_balls_msg.markers.push_back(obs_ball);
     }
