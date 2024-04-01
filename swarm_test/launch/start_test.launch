@@ -14,7 +14,8 @@
   <node pkg="swarm_test" type="data_processor_node" name="data_processor_node" output="screen">
     <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
     <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
-    <param name="/obs_manager/use_GroundTruth"  value="true" type="bool"/>
+    <param name="/obs_manager/use_GroundTruth"  value="true"  type="bool"/>
+    <param name="/data/record_sign"             value="false" type="bool"/>
   </node>
 
   <!-- rosbag录制 -->

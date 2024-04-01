@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <tf/transform_datatypes.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <cmath>
 
 #include <costmap_converter/ObstacleArrayMsg.h>   // TEB预测轨迹消息类型
 #include <std_msgs/Float32MultiArray.h>           // 清华DCBF预测轨迹消息类型
@@ -62,6 +63,21 @@ public:
     std::cout << "ObsManager init done !!!" << std::endl;
   }
 
+    // 作为障碍物往返直线运动的函数
+  void sfunc(double A, double T, double tt, double& res_pos, double& res_vel, double init_pos)
+  {
+    double k = 2*A/T;
+    if(tt<T) {
+      res_pos = -k * tt + A + init_pos;
+      res_vel = -k;
+    }
+    else {
+      res_pos = k * tt - 3*A + init_pos;
+      res_vel = k;
+    }
+    
+  }
+  
   // 根据时间返回障碍物的状态: posVel_list: P_x, P_y, V_x, V_y;   radius_lists: 对应的障碍物半径
   void get_obs_state(ros::Time cur_time, std::vector<Eigen::Vector4d>& posVel_list, std::vector<double>& radius_lists)
   {
@@ -79,14 +95,21 @@ public:
         double rel_time = cur_time.toSec() - traj_iter->second.Time0;
 
         // 根据轨迹参数，计算当前时间的障碍物位置和速度状态
-        Eigen::Vector2d tmp_X;
-        tmp_X[0] = 1.0 * rel_time / traj_iter->second.slower_ + traj_iter->second.offset_;
-        tmp_X[1] = 2.0 * rel_time / traj_iter->second.slower_ + traj_iter->second.offset_;
+        // Eigen::Vector2d tmp_X;
+        // tmp_X[0] = 1.0 * rel_time / traj_iter->second.slower_ + traj_iter->second.offset_;
+        // tmp_X[1] = 2.0 * rel_time / traj_iter->second.slower_ + traj_iter->second.offset_;
         Eigen::Vector4d cur_posVel;
-        cur_posVel[0] = traj_iter->second.scale_.x() * (sin(tmp_X[0]) + 2.0 * sin(tmp_X[1])) + traj_iter->second.pos_xy_.x();
-        cur_posVel[1] = traj_iter->second.scale_.y() * (cos(tmp_X[0]) - 2.0 * cos(tmp_X[1])) + traj_iter->second.pos_xy_.y();
-        cur_posVel[2] = traj_iter->second.scale_.x() * (cos(tmp_X[0]) + 4.0 * cos(tmp_X[1])) / traj_iter->second.slower_;
-        cur_posVel[3] = traj_iter->second.scale_.y() * (-1.0 * sin(tmp_X[0]) + 4.0 * sin(tmp_X[1])) / traj_iter->second.slower_;
+        // cur_posVel[0] = traj_iter->second.scale_.x() * (sin(tmp_X[0]) + 2.0 * sin(tmp_X[1])) + traj_iter->second.pos_xy_.x();
+        // cur_posVel[1] = traj_iter->second.scale_.y() * (cos(tmp_X[0]) - 2.0 * cos(tmp_X[1])) + traj_iter->second.pos_xy_.y();
+        // cur_posVel[2] = traj_iter->second.scale_.x() * (cos(tmp_X[0]) + 4.0 * cos(tmp_X[1])) / traj_iter->second.slower_;
+        // cur_posVel[3] = traj_iter->second.scale_.y() * (-1.0 * sin(tmp_X[0]) + 4.0 * sin(tmp_X[1])) / traj_iter->second.slower_;
+        // posVel_list.push_back(cur_posVel);
+        // radius_lists.push_back(traj_iter->second.circle_R_);
+
+        // for janedipan's model
+        double tmpc_X = fmod((rel_time +traj_iter->second.offset_), 2*traj_iter->second.slower_);
+        sfunc(traj_iter->second.scale_.x(), traj_iter->second.slower_, tmpc_X, cur_posVel[0], cur_posVel[2], traj_iter->second.pos_xy_.x());
+        sfunc(traj_iter->second.scale_.y(), traj_iter->second.slower_, tmpc_X, cur_posVel[1], cur_posVel[3], traj_iter->second.pos_xy_.y());
         posVel_list.push_back(cur_posVel);
         radius_lists.push_back(traj_iter->second.circle_R_);
       }
