@@ -92,7 +92,7 @@ bool PlanManager::hybridReplan(Eigen::Vector2d start_pt, Eigen::Vector2d start_v
 
   drawBspline(bspline_traj_);       // 输出B样条可视化
 
-  std::cout << "------------------------------------------------------------------------------------\n" << std::endl;
+  std::cout << "---------------------------------------------------------------------------\n" << std::endl;
   std::cout << "[Vehicle " <<  drone_id_ << "]: Theta-A* cost time := " << search_time_spend << ", Bspline-Opt cost time := " << opt_time_spend << std::endl;
 
   return true;

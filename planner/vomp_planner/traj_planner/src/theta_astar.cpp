@@ -15,6 +15,18 @@ void ThetaAstar::init(ros::NodeHandle& nh,
                       const shared_ptr<Obs_Manager>& obs_Manager)
 {
   setParam(nh);
+  if(is_used_VO_){
+    ROS_WARN("------ path searching use VO! ------");
+  }
+  else if(is_used_DIS_){
+    ROS_WARN("------ path searching use DIS! ------");
+  }
+  else if(is_used_adsm_){
+    ROS_WARN("------ path searching use ADSM! ------");
+  }
+  else{
+    ROS_WARN("------ path searching use None ------");
+  }
   setEnvironment(env);
   setObsManager(obs_Manager);
   init();
@@ -145,6 +157,7 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
     }
     else
     {
+      // 离散的x，y方向加速度值，离散的时间值
       double max_acc_y_ = max_acc_ * 0.8;
       for (double ax = -max_acc_; ax <= max_acc_ + 1e-3; ax += max_acc_ * res)
         for (double ay = -max_acc_y_; ay <= max_acc_y_ + 1e-3; ay += max_acc_y_ * res)
@@ -155,7 +168,7 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
       for (double tau = time_res * max_tau_; tau <= max_tau_; tau += time_res * max_tau_)
         durations.push_back(tau);
     }
-
+    // 基元扩展
     for (long unsigned int i = 0; i < inputs.size(); ++i) {
       for (long unsigned int j = 0; j < durations.size(); ++j) {
         
@@ -189,6 +202,13 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
           continue;
         }
 
+        // check boundary
+        if (pro_state(0,0) < origin_(0) || pro_state(0,0) >= map_size_2d_(0) 
+              || pro_state(1,0) < origin_(1)+0.5 || pro_state(1,0) >= map_size_2d_(1)-0.5)
+          {
+            continue;
+          }
+
         // Check maximal velocity
         Eigen::Vector2d pro_v = pro_state.tail(2);
         if (fabs(pro_v(0)) > max_vel_ || fabs(pro_v(1)) > max_vel_)
@@ -209,13 +229,13 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
           continue;
         }
 
-        // Check safety
+        // -------------------------------------------------------Check safety from sample points
         Eigen::Vector3d pos;
         Eigen::Matrix<double, 5, 1> xt;
         bool is_occ = false;
         for (int k = 1; k <= check_num_; ++k)
         {
-          double dt = tau * double(k) / double(check_num_);
+          double dt = tau * double(k) / double(check_num_); // 0.5/5 = 0.1检查时间间隔
           stateTransit(cur_state, xt, um, dt);
           pos = xt.head(3);
 
@@ -223,17 +243,25 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
             is_occ = true;
             break;
           }
-          
           ros::Time node_time = cur_node->node_time + ros::Duration(dt);
           bool is_vo_unsafe = false;
-          if (is_used_VO_) {  // 用vo来检查动态障碍物安全性
+
+          if (is_used_VO_) {          // 用vo来检查动态障碍物安全性
             Eigen::Vector4d node_state;
             node_state.head(2) = xt.head(2);
             node_state.tail(2) = xt.tail(2);
-            is_vo_unsafe = obs_Manager_->is_VO_unsafe(node_state, 0.8, node_time);
-          } else if (is_used_DIS_){            // 用距离来检查动态障碍物安全性
-            is_vo_unsafe = obs_Manager_->is_collide(xt.head(2), 0.8, node_time);
-          } else {
+            is_vo_unsafe = obs_Manager_->is_VO_unsafe(node_state, robot_radius, node_time);
+          } 
+          else if (is_used_DIS_){     // 用距离来检查动态障碍物安全性
+            is_vo_unsafe = obs_Manager_->is_collide(xt.head(2), robot_radius, node_time);
+          } 
+          else if (is_used_adsm_){    // 使用adsm来检测动态障碍物的安全性 
+            Eigen::Vector4d node_state;
+            node_state.head(2) = xt.head(2);
+            node_state.tail(2) = xt.tail(2);
+            is_vo_unsafe = obs_Manager_->is_Adsm_unsafe(node_state, robot_radius, node_time);
+          }
+          else {
             is_vo_unsafe = false;
           }
 
@@ -509,7 +537,7 @@ bool ThetaAstar::computeShotTraj( Eigen::VectorXd state1, Eigen::VectorXd state2
         return false;;
       }
     }
-
+    // 边界约束
     if (coord(0) < origin_(0) || coord(0) >= map_size_2d_(0) 
         || coord(1) < origin_(1) || coord(1) >= map_size_2d_(1))
     {
@@ -528,10 +556,18 @@ bool ThetaAstar::computeShotTraj( Eigen::VectorXd state1, Eigen::VectorXd state2
       Eigen::Vector4d node_state;
       node_state.head(2) = coord;
       node_state.tail(2) = vel;
-      is_vo_unsafe = obs_Manager_->is_VO_unsafe(node_state, 1.0, time_cur);
-    } else if (is_used_DIS_){             // 用距离来检查动态障碍物安全性
-      is_vo_unsafe = obs_Manager_->is_collide(coord.head(2), 1.0, time_cur);
-    } else {
+      is_vo_unsafe = obs_Manager_->is_VO_unsafe(node_state, robot_radius, time_cur);
+    } 
+    else if (is_used_DIS_){             // 用距离来检查动态障碍物安全性
+      is_vo_unsafe = obs_Manager_->is_collide(coord.head(2), robot_radius, time_cur);
+    }
+    else if (is_used_adsm_){
+      Eigen::Vector4d node_state;
+      node_state.head(2) = coord;
+      node_state.tail(2) = vel;
+      is_vo_unsafe = obs_Manager_->is_Adsm_unsafe(node_state, robot_radius, time_cur);      
+    } 
+    else {
       is_vo_unsafe = false;
     }
 
@@ -645,6 +681,7 @@ void ThetaAstar::init()
   phi_ = Eigen::MatrixXd::Identity(5, 5);
   use_node_num_ = 0;
   iter_num_ = 0;
+  robot_radius = 0.6;
 }
 
 void ThetaAstar::setParam(ros::NodeHandle& nh)
@@ -665,6 +702,7 @@ void ThetaAstar::setParam(ros::NodeHandle& nh)
   nh.param("search/is_consider_omega", is_consider_omega_, true);
   nh.param("search/is_used_VO", is_used_VO_, false);
   nh.param("search/is_used_DIS", is_used_DIS_, false);
+  nh.param("search/is_used_adsm", is_used_adsm_, false);
 
   tie_breaker_ = 1.0 + 1.0 / 10000;
 

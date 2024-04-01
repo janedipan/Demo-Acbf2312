@@ -22,6 +22,10 @@ Eigen::Vector2d end_pt_, end_vel_;                  // target state
 double v_max = 1.3;
 double step_time;
 
+double average_time;
+double total_time;
+double plan_num;
+
 void odomCallback(const nav_msgs::Odometry& msg) 
 {
     if (msg.child_frame_id == "X" || msg.child_frame_id == "O") return;
@@ -63,8 +67,12 @@ void globalPathReplan_Callback(const ros::TimerEvent& e)
   // 需要修改getKinoTraj(detal_t的时间值)
   plan_success = planner_manager_.hybridReplanAdsm(start_pt_, start_vel_, start_acc_, end_pt_, end_vel_, start_yaw_);
   double plan_time_spend = double(clock() - plan_time_start) / CLOCKS_PER_SEC;
-  std::cout << "plan_time_spend:= " << plan_time_spend << std::endl;
-  
+  total_time += plan_time_spend;
+  average_time = total_time/plan_num;
+  ROS_INFO("plan_time_spend := %f", plan_time_spend);
+  ROS_INFO("\033[35m Global-Trajectory Generation Spend Time := %f\033[0m", average_time);
+  plan_num += 1.0;
+
   if(plan_success){
     // std::cout<< "global_path plan failed!"<< std::endl;
     trajlist.clear();
@@ -111,6 +119,9 @@ int main(int argc, char** argv){
     ros::NodeHandle nh("~");
     nh.param("/global_path_by_adsm/step_time", step_time, 0.1);
 
+    plan_num = 1.0;
+    average_time = 0.0;
+    total_time = 0.0;
     planner_manager_.initPlanManage(nh);
 
     odom_sub      = nh.subscribe("/odometry", 50, odomCallback);

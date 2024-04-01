@@ -12,7 +12,7 @@ from dynamic_simulator.msg import DynTraj
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
-box_size = 0.5   # 障碍物半径
+box_size = 0.568   # 障碍物直径
 
 class DynCorridor:
 
@@ -33,11 +33,11 @@ class DynCorridor:
         self.marker_array=MarkerArray()
         self.all_dyn_traj=[]
 
-        t_ros=rospy.Time.now()
-        t=rospy.get_time()
+        t_ros = rospy.Time.now()
+        self.start_time_ = rospy.get_time()
 
         for i in range(self.total_num_obs):
-            [traj_x, traj_y, traj_z, s_num, x, y, z, mesh, bbox]=self.getTrajectoryPosMeshBBox(i, t)
+            [traj_x, traj_y, traj_z, s_num, x, y, z, mesh, bbox]=self.getTrajectoryPosMeshBBox(i, self.start_time_)
             self.marker_array.markers.append(self.generateMarker(mesh, bbox, i))
 
             dynamic_trajectory_msg = DynTraj(); 
@@ -104,11 +104,17 @@ class DynCorridor:
 
         for i in range(self.total_num_obs): 
             t_ros=rospy.Time.now()
-            t=rospy.get_time()
+            t = rospy.get_time()
           
-            x = eval(self.all_dyn_traj[i].s_mean[0])
-            y = eval(self.all_dyn_traj[i].s_mean[1])
-            z = eval(self.all_dyn_traj[i].s_mean[2])
+            # x = eval(self.all_dyn_traj[i].s_mean[0])
+            # y = eval(self.all_dyn_traj[i].s_mean[1])
+            # z = eval(self.all_dyn_traj[i].s_mean[2])
+            # for janedipan's model
+            #   s_num: scale_x/6.0, scale_y/5.0, scale_z/2.0, x, y, z, slower,  offset
+            tt = (t - self.start_time_ + self.all_dyn_traj[i].s_num[7])%(2*self.all_dyn_traj[i].s_num[6])
+            x = self.sfunc(self.all_dyn_traj[i].s_num[0], self.all_dyn_traj[i].s_num[6], tt) + self.all_dyn_traj[i].s_num[3]
+            y = self.sfunc(self.all_dyn_traj[i].s_num[1], self.all_dyn_traj[i].s_num[6], tt) + self.all_dyn_traj[i].s_num[4]
+            z = self.sfunc(self.all_dyn_traj[i].s_num[2], self.all_dyn_traj[i].s_num[6], tt) + self.all_dyn_traj[i].s_num[5]
 
             # Set the stamp and the current pos
             self.all_dyn_traj[i].header.stamp= t_ros
@@ -126,6 +132,13 @@ class DynCorridor:
         
         self.pubShapes_dynamic_mesh.publish(self.marker_array)
 
+    def sfunc(self, A:float, T:float, tt:float):
+        k = 2*A/T
+        if tt < T:
+            return -k * tt + A
+        else:
+            return k * tt -3*A
+    
     def trefoil(self,x,y,z,scale_x, scale_y, scale_z, offset, slower, start_time):
 
         tt='(t - ' + str(start_time) + ')/' + str(slower)+' + '

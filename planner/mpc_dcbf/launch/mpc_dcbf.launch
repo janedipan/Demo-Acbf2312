@@ -5,10 +5,11 @@
     <arg name="step_time_" />
 
     <!-- 全局规划 -->
-    <!-- <node name="global_path_pub" pkg="mpc_dcbf" type="global_path_pub"/> -->
-    <node name="global_path_by_rviz" pkg="mpc_dcbf" type="global_path_by_rviz" >
-        <param name="step_time" value="$(arg step_time_)" />
-    </node>
+    <node name="global_path_pub" pkg="mpc_dcbf" type="global_path_pub" />
+
+    <!-- <node name="global_path_by_rviz" pkg="mpc_dcbf" type="global_path_by_rviz" > -->
+        <!-- <param name="step_time" value="$(arg step_time_)" />
+    </node> -->
 
     <!-- 清华大学mpc_dcbf局部规划 -->
     <node name="local_planner" pkg="mpc_dcbf" type="mpc_acbf.py" output="screen">

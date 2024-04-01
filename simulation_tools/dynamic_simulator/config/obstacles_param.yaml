@@ -9,14 +9,38 @@ obstacle_params:
   # - {x: 15.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
   # - {x: 15.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 6.0, scale_y: 0.0, scale_z: 0.0}
   # - {x: 19.0, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-# for JANE
-  - {x: 2.5, y: 0.0, z: 0.75, offset: 3.14, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-  - {x: 6.5, y: -0.5, z: 0.75, offset: -3.14, slower: 5.0, scale_x: 6.0, scale_y: 0.0, scale_z: 0.0}
-  - {x: 6.5, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-  - {x: 8.5, y: 0.0, z: 0.75, offset: -3.14, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-  - {x: 10.5, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-  - {x: 12.5, y: 0.0, z: 0.75, offset: -3.14, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-  - {x: 14.5, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
-  - {x: 14.5, y: 0.5, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 6.0, scale_y: 0.0, scale_z: 0.0}
-  - {x: 17.5, y: 0.0, z: 0.75, offset: 0.0, slower: 5.0, scale_x: 0.0, scale_y: 6.0, scale_z: 0.0}
 
+# for JANE
+# scenario1: 5-0.5
+# - {x: 7.0, y: 1.0, z: 0.75, offset: 2.0, slower: 4, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 10.0, y: -1.0, z: 0.75, offset: -2.0, slower: 4, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 13.0, y: -1.0, z: 0.75, offset: 3.0, slower: 4, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 16.0, y: 1.0, z: 0.75, offset: 5.5, slower: 4, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 5.0, y: 0.0, z: 0.75, offset: 4.8, slower: 5, scale_x: 0.0, scale_y: 12.5, scale_z: 0.0}
+
+
+# x/6: 9, 18, 27(1.5), 28.8(1.6), 30.6(1.7), 32.4(1.8), 36(2.0)
+# y/5: 7.5, 15, 22.5
+# scenario2: 5-1.0
+# 24-0327
+# - {x: 5.1, y: -0.47, z: 0.75, offset: 9.0, slower: 6.0, scale_x: 18, scale_y: 0.0, scale_z: 0.0}
+# - {x: 7.75, y: 1.0, z: 0.8, offset: 6.0, slower: 6.0, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 11.20, y: 0.5, z: 0.8, offset: 2.0, slower: 6.0, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 15.25, y: 0.0, z: 0.8, offset: 0.0, slower: 6.0, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 15.1, y: 0.4, z: 0.75, offset: 9.0, slower: 6.0, scale_x: 18, scale_y: 0.0, scale_z: 0.0}
+
+# scenario3: 5-1.5
+# 24-0328
+# - {x: 5.1, y: -0.47, z: 0.75, offset: 9.0, slower: 6.0, scale_x: 18, scale_y: 0.0, scale_z: 0.0}
+# - {x: 7.70, y: 1.0, z: 0.8, offset: 6.0, slower: 6.0, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 11.50, y: 0.5, z: 0.8, offset: 4.8, slower: 4.0, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 14.25, y: 0.0, z: 0.8, offset: 2.0, slower: 4.0, scale_x: 0.0, scale_y: 15.0, scale_z: 0.0}
+# - {x: 15.1, y: 0.5, z: 0.75, offset: 9.0, slower: 6.0, scale_x: 18, scale_y: 0.0, scale_z: 0.0}
+
+# scenario1: 5-0.5
+# 24-0327
+# - {x: 5.1, y: -0.5, z: 0.75, offset: 9.0, slower: 6.0, scale_x: 9.0, scale_y: 0.0, scale_z: 0.0}
+# - {x: 6.5, y: 0.5, z: 0.75, offset: 5.5, slower: 6.0, scale_x: 0.0, scale_y: 7.5, scale_z: 0.0}
+# - {x: 10.5, y: 0.5, z: 0.75, offset: 8.0, slower: 8.5, scale_x: 9.0, scale_y: 7.5, scale_z: 0.0}
+# - {x: 13.5, y: -0.5, z: 0.75, offset: 1.0, slower: 8.5, scale_x: -9.0, scale_y: 7.5, scale_z: 0.0}
+# - {x: 16.5, y: 0.5, z: 0.75, offset: 3.0, slower: 8.5, scale_x: 9.0, scale_y: 7.5, scale_z: 0.0}

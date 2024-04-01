@@ -38,13 +38,14 @@ private:
   int allocate_num_, check_num_;
   double tie_breaker_;
   bool optimistic_;
+  double robot_radius;
 
   /* map参数 */
   double resolution_, inv_resolution_, time_resolution_, inv_time_resolution_;
   Eigen::Vector2d origin_, map_size_2d_;
   double time_origin_;
 
-  bool is_used_VO_, is_used_DIS_;
+  bool is_used_VO_, is_used_DIS_, is_used_adsm_;
 
   /* helper */
   Eigen::Vector2i posToIndex(Eigen::Vector2d pt);

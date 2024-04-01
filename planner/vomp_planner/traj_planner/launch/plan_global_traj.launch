@@ -2,6 +2,8 @@
     <arg name="_drone_id"      default="0"/>
     <!-- 扩展运动基元间隔时间 -->
     <arg name="step_time_" />
+    <arg name="used_DIS_"/>
+    <arg name="used_adsm_"/>
 
     <arg name="map_size_x_"    default="50.0"/>
     <arg name="map_size_y_"    default="8.0"/>
@@ -41,11 +43,11 @@
         <param name="manager/init_traj_sample_time"   value="0.4" type="double"/>
 
         <!-- kinodynamic path searching -->
-        <param name="search/max_tau"            value="0.6" type="double"/>
+        <param name="search/max_tau"            value="0.5" type="double"/>
         <param name="search/init_max_tau"       value="1.0" type="double"/>
         <param name="search/max_vel"            value="1.5" type="double"/>
         <param name="search/max_acc"            value="2.0" type="double"/>
-        <param name="search/omega_max"          value="0.8" type="double"/>
+        <param name="search/omega_max"          value="0.6" type="double"/>
         <param name="search/w_time"             value="10.0" type="double"/>
         <param name="search/horizon"            value="6.0" type="double"/>
         <param name="search/lambda_heu"         value="10000.0" type="double"/>
@@ -54,10 +56,12 @@
         <param name="search/margin"             value="0.2" type="double"/>
         <param name="search/allocate_num"       value="10000" type="int"/>
         <param name="search/check_num"          value="5" type="int"/>
+        <!-- 角速度的限制 -->
         <param name="search/is_consider_omega"  value="false" type="bool"/>
-        <!-- is_used_VO和is_used_DIS都是false时，路径搜索不进行动态障碍物碰撞检测 -->
-        <param name="search/is_used_VO"         value="true" type="bool"/>
-        <param name="search/is_used_DIS"        value="false" type="bool"/>
+        <!-- is_used_VO和is_used_DIS都是false时，路径搜索不进行动态障碍物碰撞检测 安全约束的设置 -->
+        <param name="search/is_used_VO"         value="false" type="bool"/>
+        <param name="search/is_used_DIS"        value="$(arg used_DIS_)" type="bool"/>
+        <param name="search/is_used_adsm"       value="$(arg used_adsm_)" type="bool"/>
 
         <!-- 地图参数 -->
         <param name="sdf_map/resolution"            value="0.1" />
