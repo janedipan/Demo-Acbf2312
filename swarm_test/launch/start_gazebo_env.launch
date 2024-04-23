@@ -1,0 +1,41 @@
+<launch>
+  <!-- 使用rosbag时, 必须设置为true; 实物实验请设置为false -->
+  <param name="/use_sim_time" value="false"/>
+
+    <arg name="gazebo"          default="true" />
+    <arg name="gzclient"        default="true"/>
+    <arg name="use_teleop_key"  default="true"/>
+    <arg name="num_of_obs"  default="2" />       <!-- 障碍物数量 -->
+
+    <!-- 加载gazebo环境 -->
+    <arg name="world_name" default="$(find scout_gazebo_sim)worlds/simple_env.world" />
+    <!-- <arg name="world_name" default="$(find hunter2_gazebo)/env/random_1.world" /> -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world_name)"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="$(arg gzclient)"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+  
+    <group if="$(arg use_teleop_key)">
+        <node name="teleop_cmd_vel" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" launch-prefix="gnome-terminal --title=teleop_twist_keyboard -x" >
+            <remap from="/cmd_vel" to="/robot1/cmd_vel"/>
+        </node>
+    </group>
+
+    <!-- 加载障碍物参数 -->
+    <rosparam command="load" file="$(find dynamic_simulator)/config/obstacles_param_gazebo.yaml" />
+    <node name="dynamic_corridor" pkg="dynamic_simulator" type="generate_agents_fixed_poses_gazebo.py" args="$(arg num_of_obs) $(arg gazebo)" output="screen"/> 
+
+    <!-- 加载机器人模型 -->
+    <include file="$(find scout_gazebo_sim)/launch/spawn_scout_v2_use1.launch">
+        <arg name="x1"      value="0.0"/>
+        <arg name="y1"      value="0.0"/>
+        <arg name="z1"      value="-0.25"/>
+        <arg name="yaw1"    value="0.0"/>
+        <arg name="use_fast_lio_"   value="true"/>
+    </include>
+
+</launch>

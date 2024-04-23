@@ -576,7 +576,7 @@ class Local_Planner():
             sol = opti.solve()
             u_res = sol.value(opt_controls)
             state_res = sol.value(opt_states)
-            print(sol.value(tau_list))
+            # print(sol.value(tau_list))
 
             self.last_input = u_res
             self.last_state = state_res

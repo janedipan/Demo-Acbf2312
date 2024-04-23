@@ -1,0 +1,76 @@
+<launch>
+  <!-- 使用rosbag时, 必须设置为true; 实物实验请设置为false -->
+  <param name="/use_sim_time" value="true"/>
+
+  <arg name="mpc_frequency" value="5" />
+  <arg name="pre_step"      value="20" />
+  <arg name="step_time"     value="0.2" />
+  <!-- 全局路径那搜索的安全指标，控制器安全约束类型 -->
+  <arg name="front_dis"     value="false" />
+  <arg name="front_adsm"    value="false" />
+  <arg name="controller"    value="4" />
+  <!-- 切换机器人的定位：真值使用/Odometry, 状态估计使用/robot1/odom -->
+  <arg name="use_sim_time" value="false"/>
+  <arg name="odom_topic_use"  value="/robot1/odom" />
+  <!-- <arg name="odom_topic_use"  value="/Odometry" /> -->
+  
+  
+
+  <!-- 差速机器人可视化 -->
+  <node pkg="robot_simulator" type="scout_visualizer_node" name="scout_visualizer_node" output="screen">
+    <param name="ugv/mesh" value="package://robot_simulator/param/scout2.STL" type="string"/>
+    <remap from="~odometry" to="$(arg odom_topic_use)"/>
+    <remap from="~odom_mesh" to="/vis/mesh"/>
+    <param name="ugv/color_r" value="0.02" type="double"/>
+    <param name="ugv/color_g" value="0.25" type="double"/>
+    <param name="ugv/color_b" value="15.09" type="double"/>
+    <param name="ugv/color_a" value="0.8" type="double"/>
+  </node>
+
+  <!-- 障碍物轨迹可视化 -->
+  <!-- 1,0,0,0.3 红色adsm+acbf; 0,0,1,0.3 蓝色none+acbf; 1,0,1,0.3 粉色none+dcbf; 1,0,1,0.3 紫色 -->
+  <node pkg="swarm_test" type="odom_traj_visualization_node" name="odom_traj_visualization_node">
+    <remap from="/odometry" to="$(arg odom_topic_use)"/>
+    <param name="odom_traj_vis/line_width"     value="0.05" type="double"/>
+    <param name="odom_traj_vis/color_r"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/color_g"        value="0.0" type="double"/>
+    <param name="odom_traj_vis/color_b"        value="0.0" type="double"/>
+    <param name="odom_traj_vis/color_a"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/show_odom_size" value="1000" type="int"/>
+  </node>
+
+  <!-- 启动障碍物管理: 用于为运动规划模块提供障碍物信息 -->
+  <node pkg="traj_planner" type="obs_Manager_node" name="obs_Manager_node" output="screen">
+    <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
+    <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
+    <param name="/obs_manager/use_GroundTruth"  value="$(arg use_sim_time)" type="bool"/>
+    <param name="pre_step_" value="$(arg pre_step)" />
+    <param name="step_time_" value="$(arg step_time)"/>
+  </node>
+
+  <!-- global_path searching -->
+  <!-- 如果是在仿真时：<arg name="cloud_topic"             value="velodyne_points_world_no_use"/> -->
+  <!-- <include file="$(find traj_planner)/launch/plan_global_traj.launch">
+    <arg name="odometry_topic"          value="$(arg odom_topic_use)"/>
+    <arg name="cloud_topic"             value="/fastLIO/non_ground_points"/>
+    <arg name="_perception_GroundTruth" value="false"/>
+    <arg name="step_time_"              value="$(arg step_time)" />
+    <arg name="used_DIS_"               value="$(arg front_dis)" />
+    <arg name="used_adsm_"              value="$(arg front_adsm)" />
+    <arg name="traj_horizon"            value="10.0"/>
+    <arg name="map_size_x_"             value="50.0"/>
+    <arg name="map_size_y_"             value="20.0"/>
+  </include> -->
+
+  <!-- MPC-D-CBF规划-->
+  <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm.launch">
+    <arg name="controller_" value="$(arg controller)"/>
+    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
+    <arg name="pre_step_" value="$(arg pre_step)" />
+    <arg name="step_time_" value="$(arg step_time)" />
+    <arg name="odometry_topic" value="$(arg odom_topic_use)"/>
+    <arg name="cmd_topic" value="/cmd_vel"/>
+  </include> -->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_gazebo_sim)/config/single_scout.rviz" />
+</launch>

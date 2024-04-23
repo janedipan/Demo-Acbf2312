@@ -1,0 +1,13 @@
+<robot name="my_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:arg name="robot_namespace" default="/" />    
+    <xacro:property name="lidar" value="/velodyne_points" />
+    <!--scout model-->
+    <xacro:include filename="scout_v2_use1.xacro" />
+ 
+    <!--veldoyne model-->
+    <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+
+    <xacro:VLP-16 parent="base_link" name="velodyne" topic="$(arg robot_namespace)${lidar}" organize_cloud="false" hz="10" samples="440" gpu="false">
+        <origin xyz="0 0 0.3" rpy="0 0 0" />
+    </xacro:VLP-16>
+</robot>

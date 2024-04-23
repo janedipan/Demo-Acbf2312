@@ -1,0 +1,100 @@
+<launch>
+    <!-- initial pose -->
+    <arg name="x1" default="-7.0"/>
+    <arg name="y1" default="8.0"/>
+    <arg name="z1" default="-0.25"/>
+    <arg name="Y1" default="0.0"/>
+
+    <arg name="x2" default="-5.0"/>
+    <arg name="y2" default="8.0"/>
+    <arg name="z2" default="-0.25"/>
+    <arg name="Y2" default="0.0"/>
+
+    <arg name="robot_namespace1" default="/robot1"/>
+    <arg name="robot_namespace2" default="/robot2"/>
+
+
+    <group ns="$(arg robot_namespace1)">
+        <include file="$(find scout_description)/launch/scout_v2_stock_use.launch">
+            <arg name="robot_namespace" value="$(arg robot_namespace1)" />
+        </include>
+
+        <node name="spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x1)
+                -y $(arg y1)
+                -z $(arg z1)
+                -Y $(arg Y1)
+                -unpause
+                -urdf
+                -param robot_description
+                -model 'scout$(arg robot_namespace1)'" >
+        </node>
+        <rosparam file="$(find scout_gazebo_sim)/config/scout_v2_control.yaml" command="load"/>
+
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="scout_state_controller 
+                scout_motor_fr_controller 
+                scout_motor_fl_controller 
+                scout_motor_rl_controller 
+                scout_motor_rr_controller"/>   
+
+        <node name= "robot_state_publisher1" pkg= "robot_state_publisher" type= "robot_state_publisher">
+            <param name="publish_frequency" type="double" value="20.0" />
+            <param name="tf_prefix" value="$(arg robot_namespace1)" />
+        </node>
+
+        <node name="scout_skid_steer_controller" pkg="scout_gazebo_sim" type="scout_skid_steer_controller">
+            <param name="robot_namespace" type="string" value="$(arg robot_namespace1)" />
+        </node>
+
+        <!--publish odometry: odom1->robot1/base_link-->
+        <node name="robot2_pub_odom" pkg="scout_gazebo_sim" type="scout_pub2_odom.py" output="screen" /> 
+
+    </group>
+
+    <!-- <group ns="$(arg robot_namespace2)">
+        <include file="$(find scout_description)/launch/scout_v2_stock_use.launch">
+            <arg name="robot_namespace" value="$(arg robot_namespace2)" />
+        </include>
+
+        <node name="spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x2)
+                -y $(arg y2)
+                -z $(arg z2)
+                -Y $(arg Y2)
+                -unpause
+                -urdf
+                -param robot_description
+                -model 'scout$(arg robot_namespace2)'" >
+        </node>
+        <rosparam file="$(find scout_gazebo_sim)/config/scout_v2_control.yaml" command="load"/>
+
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="scout_state_controller 
+                scout_motor_fr_controller 
+                scout_motor_fl_controller 
+                scout_motor_rl_controller 
+                scout_motor_rr_controller"/>   
+
+        <node name= "robot_state_publisher2" pkg= "robot_state_publisher" type= "robot_state_publisher">
+            <param name="publish_frequency" type="double" value="20.0" />
+            <param name="tf_prefix" value="$(arg robot_namespace2)" />
+        </node>
+
+        <node name="scout_skid_steer_controller" pkg="scout_gazebo_sim" type="scout_skid_steer_controller">
+            <param name="robot_namespace" type="string" value="$(arg robot_namespace2)" />
+        </node>
+
+    </group> -->
+
+    <!-- <node name="publish_robot1" pkg="scout_gazebo_sim" type="scout_odom_tf1.py" output="screen" >
+        <remap from="/state_ukf/odom1" to="/robot1/odometry"/>
+        <param name="robot_namespace" type="string" value="$(arg robot_namespace1)" />
+    </node> -->
+
+    <!-- <node name="publish_robot2" pkg="scout_gazebo_sim" type="scout_odom_tf2.py" output="screen" >
+        <remap from="/state_ukf/odom1" to="/robot2/odometry"/>
+        <param name="robot_namespace" type="string" value="$(arg robot_namespace2)" />
+    </node> -->
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world2odom1" args="0 0 0 0 0 0 /world /odom1" output="screen" />
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="world2odom2" args="0 0 0 0 0 0 /world /odom2" output="screen" /> -->
+
+</launch>
+

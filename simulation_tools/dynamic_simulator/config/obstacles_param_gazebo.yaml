@@ -1,0 +1,10 @@
+obstacle_params:
+# ------------------------------------------------------------------------------------------------------------------- gazebo
+- {x: 21.0, y: 5.2,   z: 1.0, offset: -6.0, slower: 6.0,    scale_x: 0.0, scale_y: 0.0, scale_z: 0.0}
+- {x: 21.0, y: -5.2,  z: 1.0, offset: -6.0, slower: 6.0,    scale_x: 0.0, scale_y: 0.0, scale_z: 0.0}
+- {x: 2.5, y: 5.2,    z: 1.0, offset: -6.0, slower: 6.0,    scale_x: 0.0, scale_y: 0.0, scale_z: 0.0}
+- {x: 2.5, y: -5.2,   z: 1.0, offset: -6.0, slower: 6.0,    scale_x: 0.0, scale_y: 0.0, scale_z: 0.0}
+
+- {x: 17.0, y: 2.5,  z: 1.0, offset: -6.0, slower: 8.0,    scale_x: 0.0, scale_y: 0.0, scale_z: 0.0}
+- {x: 11.0, y: -2.5,   z: 1.0, offset: 6.0,  slower: 8.0,    scale_x: 0.0, scale_y: 0.0, scale_z: 0.0}
+- {x: 5.0,  y: 1.0,   z: 1.0, offset: 0.0,  slower: 8.0,    scale_x: 0.0, scale_y: 10.0, scale_z: 0.0}

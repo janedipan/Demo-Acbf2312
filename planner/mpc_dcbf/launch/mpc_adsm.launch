@@ -1,8 +1,10 @@
 <launch>
-    <arg name="controller_" />
-    <arg name="mpc_frequency_" />
-    <arg name="pre_step_" />
-    <arg name="step_time_" />
+    <arg name="controller_" default="3" />
+    <arg name="mpc_frequency_" default="5" />
+    <arg name="pre_step_"   default="25"/>
+    <arg name="step_time_"  default="0.1"/>
+    <arg name="odometry_topic" default="/odometry"/>
+    <arg name="cmd_topic" default="/cmd_vel"/>
 
     <!-- 全局规划 -->
     <!-- <node name="global_path_pub" pkg="mpc_dcbf" type="global_path_pub"/> -->
@@ -21,7 +23,8 @@
 
     <!-- 控制指令 -->
     <node name="controller" pkg="mpc_dcbf" type="controller.py">
-        <remap from="/cmd_vel" to="/cmd_vel" />
+        <remap from="/cmd_vel"  to="$(arg cmd_topic)" />
+        <remap from="/odometry" to="$(arg odometry_topic)" />
     </node>
 
 </launch>

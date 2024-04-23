@@ -129,7 +129,6 @@ class DynCorridor:
             self.marker_array.markers[i].pose.position.x=x
             self.marker_array.markers[i].pose.position.y=y
             self.marker_array.markers[i].pose.position.z=z
-        
         self.pubShapes_dynamic_mesh.publish(self.marker_array)
 
     def sfunc(self, A:float, T:float, tt:float):

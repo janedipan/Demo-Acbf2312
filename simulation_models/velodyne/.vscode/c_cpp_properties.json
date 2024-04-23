@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/pi/learn/mpl_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/ausim_test/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/traversability_mapping/utils/DecompROS/decomp_ros_utils/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/LIO-SAM/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/mpc/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/scout/scout_gazebo_sim/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/hunter_simulator/steer_bot_hardware_gazebo/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/hunter_simulator/steer_drive_controller/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/traversability_mapping/traj_planner/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/traversability_mapping/traversability_mapping/include/**",
+        "/home/pi/learn/mpl_ws/src/mpl/scout/velodyne/velodyne_gazebo_plugins/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

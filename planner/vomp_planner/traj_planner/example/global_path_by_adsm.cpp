@@ -125,7 +125,7 @@ int main(int argc, char** argv){
     planner_manager_.initPlanManage(nh);
 
     odom_sub      = nh.subscribe("/odometry", 50, odomCallback);
-    waypoint_sub_ = nh.subscribe("/move_base_simple/goal", 1, waypointCallback);
+    waypoint_sub_ = nh.subscribe("/waypoints", 1, waypointCallback);
     mpc_traj_pub_ = nh.advertise<nav_msgs::Path>("/global_path", 20);
     
     ros::Timer replan_timer = nh.createTimer(ros::Duration(0.1), globalPathReplan_Callback);      // 定时全局路径搜索

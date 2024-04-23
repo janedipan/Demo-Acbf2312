@@ -51,6 +51,7 @@ public:
     if (is_use_GroundTruth) {
       obsTraj_sub = nh.subscribe("/trajs", 100, &Obs_Manager::obsTrajCallback, this);
     } else {
+      ROS_WARN("use_dynamic_perception_data!");
       predicted_Traj_sub = nh.subscribe("/trajs_predicted", 100, &Obs_Manager::predict_Traj_Callback, this);
     }
 
@@ -119,6 +120,7 @@ public:
     }
     else
     {
+      // ROS_WARN("get obstacle_predicted traj from real-world");
       // 遍历轨迹容器，根据时间返回可用的障碍物位置
       // 多项式拟合轨迹
       for (auto traj_iter = obstalce_trajs_.begin(); traj_iter != obstalce_trajs_.end(); traj_iter++) {
@@ -183,7 +185,7 @@ public:
     for (int i = 0; i < posVel_list.size(); i++) {  // 遍历障碍物状态容器，查询是否碰撞
       double distance = (pos - posVel_list[i].head(2)).norm();
 
-      if(distance <= radius_list[i] + robot_R + 0.1) {  // (当前位置与障碍物中心距离) 小于 (障碍物半径 + 机器人半径)
+      if(distance <= radius_list[i] + robot_R + 0.0) {  // (当前位置与障碍物中心距离) 小于 (障碍物半径 + 机器人半径)
         return true;                              // 返回碰撞!
       }
     }
@@ -265,6 +267,7 @@ public:
 private:
 
   bool is_use_GroundTruth;
+  bool is_play_bag;
 
   ros::Subscriber obsTraj_sub, predicted_Traj_sub;
 
@@ -308,7 +311,7 @@ private:
 
       std::vector<Eigen::Vector4d> posVel_list;   // 获取当前时间的障碍物状态
       std::vector<double> radius_list;            // 获取当前时间的障碍物半径
-
+      obs_ball.id = obs_ball.id + 1;
       get_obs_state(time_index, posVel_list, radius_list);
       for (int i = 0; i < posVel_list.size(); i++) {
         geometry_msgs::Point p;
@@ -326,8 +329,9 @@ private:
   }
 
   void pub_DCBF_traj() {
-    if(obstalce_trajs_.size() == 0) return; // 没有障碍物轨迹，返回
-
+    if(obstalce_trajs_.size() == 0) {
+      return; // 没有障碍物轨迹，返回
+    }
     std_msgs::Float32MultiArray dcbf_msgs;
     std_msgs::Float32MultiArray acbf_msgs;
     ros::Time time_now = ros::Time::now();
@@ -408,7 +412,7 @@ private:
     tebTraj_pub.publish(obs_Array);
   }
 
-  // 使用障碍物轨迹真值
+  // --------------------使用障碍物轨迹真值
   void obsTrajCallback(const dynamic_simulator::DynTraj& msg)     // 接收障碍物真值轨迹的回调函数
   {
     obstacle_traj tmp_obs;    // 将障碍物消息转为vo_obstacle格式
@@ -464,7 +468,7 @@ private:
     pub_TEB_traj();
   }
 
-  // 动态感知得出障碍物预测轨迹
+  // --------------------动态感知得出障碍物预测轨迹
   void predict_Traj_Callback(const dynamic_simulator::DynTraj& msg)     // 接收障碍物预测轨迹的回调函数
   {
     obstacle_traj tmp_obs;    // 将障碍物消息转为vo_obstacle格式
@@ -495,11 +499,8 @@ private:
     // 删除操作1: 删除超时的障碍物轨迹
     ros::Time time_now = ros::Time::now(); //当前时刻
     std::vector<std::unordered_map<int, obstacle_traj>::iterator> elements_to_remove;
-
     for (auto traj_iter = obstalce_trajs_.begin(); traj_iter != obstalce_trajs_.end(); traj_iter++) {
-
       double time_out = time_now.toSec() - traj_iter->second.Time0;
-
       if(time_out >= 1.0 - 1e-3 && traj_iter != obstalce_trajs_.end()) {  // 删除超时的障碍物轨迹
         elements_to_remove.push_back(traj_iter);
       }
