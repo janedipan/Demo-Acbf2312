@@ -91,6 +91,7 @@ public:
   void set_IsConsiderVO(bool is_consider_VO) {is_used_VO_ = is_consider_VO;}
 
   std::vector<Eigen::Vector2d> getKinoTraj(double delta_t);
+  std::vector<ros::Time> getKinoTraj_t(double delta_t);
 
   void getSamples(double& ts, vector<Eigen::Vector2d>& point_set,
                   vector<Eigen::Vector2d>& start_end_derivatives);

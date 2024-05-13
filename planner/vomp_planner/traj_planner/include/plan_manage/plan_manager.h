@@ -24,6 +24,8 @@ public:
                     Eigen::Vector2d end_pt, Eigen::Vector2d end_vel, double start_yaw);
   bool hybridReplanAdsm(Eigen::Vector2d start_pt, Eigen::Vector2d start_vel, Eigen::Vector2d start_acc,
                     Eigen::Vector2d end_pt, Eigen::Vector2d end_vel, double start_yaw);
+  bool hybridReplanFsm(Eigen::Vector2d start_pt, Eigen::Vector2d start_vel, Eigen::Vector2d start_acc,
+                    Eigen::Vector2d end_pt, Eigen::Vector2d end_vel, double start_yaw);
 
   void callTrajOptimize();
 
@@ -31,12 +33,13 @@ public:
   void initPlanManage(ros::NodeHandle& nh);
 
   ros::Time get_startTime(){ return start_time_; }
-
   double get_duration(){ return bspline_traj_.getTimeSum(); }
 
   Eigen::Vector2d get_startPoint(){ return bspline_traj_.evaluateDeBoorT(0.0);}
 
   NonUniformBspline get_optimal_traj(){return bspline_traj_;}
+
+  Eigen::Vector2d evaluateFrontPose(ros::Time& t, std::vector<ros::Time>& tlist);
 
 private:
 
@@ -67,6 +70,7 @@ public:
   void drawKinoPath(const std::vector<Eigen::Vector2d>& trajlist){
     nav_msgs::Path vis_pathmsg;
     vis_pathmsg.header.frame_id = "world";
+    vis_pathmsg.header.stamp = ros::Time::now();
     for(auto pos : trajlist){
       geometry_msgs::PoseStamped pose;
       pose.header.frame_id = "world";
@@ -84,6 +88,13 @@ public:
     std::vector<Eigen::Vector2d> trajlist;
     trajlist = theta_path_finder_->getKinoTraj(step_time);
     return trajlist;
+  }
+
+  std::vector<ros::Time> get_time_list(double step_time)
+  {
+    std::vector<ros::Time> timelist;
+    timelist = theta_path_finder_->getKinoTraj_t(step_time);
+    return timelist; 
   }
 
   void drawBspline(NonUniformBspline& bspline){

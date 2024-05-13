@@ -69,8 +69,8 @@ void globalPathReplan_Callback(const ros::TimerEvent& e)
   double plan_time_spend = double(clock() - plan_time_start) / CLOCKS_PER_SEC;
   total_time += plan_time_spend;
   average_time = total_time/plan_num;
-  ROS_INFO("plan_time_spend := %f", plan_time_spend);
-  ROS_INFO("\033[35m Global-Trajectory Generation Spend Time := %f\033[0m", average_time);
+  // ROS_INFO("plan_time_spend := %f", plan_time_spend);
+  // ROS_INFO("\033[35m Global-Trajectory Generation Spend Time := %f\033[0m", average_time);
   plan_num += 1.0;
 
   if(plan_success){
@@ -86,8 +86,6 @@ void globalPathReplan_Callback(const ros::TimerEvent& e)
 
 void globalPathPub_Callback(const ros::TimerEvent& e) 
 {
-  
-  // std::vector<Eigen::Vector2d> trajlist = planner_manager_.getGlobalPath(step_time);
   int num = static_cast<int>(trajlist.size());
   if (num == 0) return;
   nav_msgs::Path global_path;

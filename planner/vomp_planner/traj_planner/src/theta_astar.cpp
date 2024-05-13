@@ -138,7 +138,7 @@ int ThetaAstar::search(Eigen::Vector2d start_pt, Eigen::Vector2d start_v, Eigen:
     cur_node->node_state = IN_CLOSE_SET;
     iter_num_ += 1;
 
-    double res = 1 / 4.0, time_res = 1 / 1.0, time_res_init = 1 / 20.0; // 搜索扩展分辨率:加速度，时间，初始时间
+    double res = 1 / 4.0, time_res = 1 / 2.0, time_res_init = 1 / 20.0; // 搜索扩展分辨率:加速度，时间，初始时间
 
     Eigen::Matrix<double, 5, 1> cur_state = cur_node->state_car;
     Eigen::Matrix<double, 5, 1> pro_state;
@@ -785,6 +785,41 @@ std::vector<Eigen::Vector2d> ThetaAstar::getKinoTraj(double delta_t)
   }
 
   return state_list;
+}
+
+std::vector<ros::Time> ThetaAstar::getKinoTraj_t(double delta_t)
+{
+  std::vector<ros::Time> time_list;
+  ros::Time x_time;
+  /* ---------- get traj of searching ---------- */
+  PathNodePtr node = path_nodes_.back();
+  ros::Time last_time = node->node_time;
+  while (node->parent != NULL)
+  {
+    Eigen::Vector2d ut = node->input;
+    double duration = node->duration;
+
+    for (double t = duration; t >= -1e-5; t -= delta_t)
+    {
+      x_time = node->parent->node_time + ros::Duration(t);
+      time_list.push_back(x_time);
+      // std::cout<< x_time.toSec()<< std::endl;
+    }
+    node = node->parent;
+  }
+  reverse(time_list.begin(), time_list.end());
+  /* ---------- get traj of one shot ---------- */
+  if (is_shot_succ_)
+  {
+    std::cout<< "............ shot success .............\n";
+    for (double t = delta_t; t <= t_shot_; t += delta_t)
+    {
+      x_time = last_time + ros::Duration(t);
+      time_list.push_back(x_time);
+    }
+  }
+
+  return time_list;
 }
 
 void ThetaAstar::getSamples(double& ts, vector<Eigen::Vector2d>& point_set,

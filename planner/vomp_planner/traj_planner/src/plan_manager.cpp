@@ -138,9 +138,42 @@ bool PlanManager::hybridReplanAdsm(Eigen::Vector2d start_pt, Eigen::Vector2d sta
 
   // drawBspline(bspline_traj_);       // 输出B样条可视化
 
-  std::cout << "------------------------------------------------------------------------------------\n" << std::endl;
+  // std::cout << "------------------------------------------------------------------------------------\n" << std::endl;
   // std::cout << "[Vehicle " <<  drone_id_ << "]: Theta-A* cost time := " << search_time_spend << ", Bspline-Opt cost time := " << opt_time_spend << std::endl;
-  std::cout << "[Vehicle " <<  drone_id_ << "]: Theta-A* cost time := " << search_time_spend << std::endl;
+  // std::cout << "[Vehicle " <<  drone_id_ << "]: Theta-A* cost time := " << search_time_spend << std::endl;
+
+  return true;
+}
+// 前端路径搜索状态机
+bool PlanManager::hybridReplanFsm(Eigen::Vector2d start_pt, Eigen::Vector2d start_vel, Eigen::Vector2d start_acc,
+                               Eigen::Vector2d end_pt, Eigen::Vector2d end_vel, double start_yaw){
+
+  clock_t search_time_start, search_time_end;    //定义clock_t变量用于计时
+  search_time_start = clock();           //开始时间
+
+  theta_path_finder_->reset();
+  // theta_path_finder_->set_IsConsiderVO(false);
+  status_ = theta_path_finder_->search(start_pt, start_vel, start_acc, start_yaw, end_pt, end_vel, false, true, -1.0); // 带theta的kino astar
+
+  // TODO1: 搜索失败不一定要退出！保留之前规划的路径点，继续优化并执行
+  // 可以把前端路径直接参数化为B样条保存下来，后面直接根据B样条去拿点给B样条重新参数化和优化
+  if (status_ == NO_PATH) {   // 搜索失败，返回false退出
+    theta_path_finder_->reset();
+    // theta_path_finder_->set_IsConsiderVO(false);    // 再尝试一下使用距离指标搜索路径
+    status_ = theta_path_finder_->search(start_pt, start_vel, start_acc, start_yaw, end_pt, end_vel, false, true, -1.0);
+
+    if (status_ == NO_PATH) {   // 搜索失败，返回false退出
+      std::cout << "[PlanManager replan]: Can't find path." << std::endl;
+      return false;
+    }
+  }
+
+  std::cout << "[PlanManager replan]: Kino search success." << std::endl;
+
+  search_time_end = clock();   // 结束时间
+  double search_time_spend = double(search_time_end - search_time_start) / CLOCKS_PER_SEC;
+
+  // drawKinoPath(theta_path_finder_->getKinoTraj(0.2));      // 输出前端路径可视化-Path数据类型
 
   return true;
 }
@@ -199,4 +232,26 @@ void PlanManager::callTrajOptimize() {
   bspline_traj_ = NonUniformBspline(ctrl_pts, 3, ts);   // 获得优化后的轨迹
 
   start_time_ = bspline_optimizers_->getStartTime();    // 记录轨迹的开始时间
+}
+
+Eigen::Vector2d PlanManager::evaluateFrontPose(ros::Time& t, std::vector<ros::Time>& tlist)
+{
+  int closeIndex;
+  std::vector<Eigen::Vector2d> traj_list;
+  Eigen::Vector2d evaluPos;
+  double minDiff = std::numeric_limits<double>::max();
+  
+  for(int i=0; i<tlist.size(); i++){
+    double diff = std::fabs(t.toSec() - tlist[i].toSec());
+    if(diff<minDiff){
+      minDiff     = diff;
+      closeIndex  = static_cast<int>(i);
+    }
+  }
+  traj_list = theta_path_finder_->getKinoTraj(0.2);
+  evaluPos = traj_list[closeIndex];
+  // std::cout<< closeIndex<< std::endl;
+  // std::cout<< "............ here .............\n";
+  // std::cout<< evaluPos<< std::endl;
+  return evaluPos;
 }
