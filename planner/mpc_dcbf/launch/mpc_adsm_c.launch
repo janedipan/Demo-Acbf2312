@@ -1,0 +1,33 @@
+<launch>
+    <arg name="mpc_frequency_" default="10" />
+    <arg name="pre_step_"   default="20"/>
+    <arg name="step_time_"  default="0.2"/>
+
+    <arg name="controller_" default="3" />
+    <arg name="odometry_topic" default="/odometry"/>
+    <arg name="cmd_topic" default="/cmd_vel"/>
+
+    <!-- 动态障碍物仿真环境 -->
+    <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle.launch">
+        <arg name="num_of_obs" value="3" /> 
+    </include>
+
+    <!-- mpc-cbf局部规划C++版本 -->
+    <node name="local_planner" pkg="mpc_dcbf" type="mpc_node_c" output="screen">
+        <param name="controller_type" value="$(arg controller_)" />
+        <param name="mpc_frequency" value="$(arg mpc_frequency_)" />
+        <param name="pre_step" value="$(arg pre_step_)" />
+        <param name="step_time" value="$(arg step_time_)" />
+        <remap from="/Odometry" to="$(arg odometry_topic)" />
+        <remap from="/cmd_vel"  to="$(arg cmd_topic)" />
+    </node>
+
+    <!-- MPC-D-CBF局部规划python版本-->
+    <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm.launch">
+        <arg name="controller_" value="$(arg controller_)"/>
+        <arg name="mpc_frequency_" value="$(arg mpc_frequency_)" />
+        <arg name="pre_step_" value="$(arg pre_step_)" />
+        <arg name="step_time_" value="$(arg step_time_)" />
+    </include> -->
+
+</launch>

@@ -85,8 +85,6 @@ void mpc_tracker::cmdCallback(const ros::TimerEvent &e) {
   // 
 
   // 
-
-
   for(int i = 0; i < N_; i++)
   {
     desired_state(0, i) = ref_traj_msg.data[3 * i + 0];

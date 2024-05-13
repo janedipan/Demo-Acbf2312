@@ -112,7 +112,7 @@ class Local_Planner():
             self.ob.append(np.array(data.data[7*i:7*i+7]))
         self.obstacle_lock.release()
 
-    def __global_path_cb(self, path):
+    def __global_path_cb(self, path:Path):
         self.global_path_lock.acquire()
         size = len(path.poses)
         if size > 0:
@@ -581,6 +581,7 @@ class Local_Planner():
             self.last_input = u_res
             self.last_state = state_res
             self.mpc_success = True
+            print(self.last_input)
 
         except:
             rospy.logerr("Infeasible Solution")
