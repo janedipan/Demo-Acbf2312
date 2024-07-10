@@ -1,0 +1,35 @@
+<launch>
+
+  <param name="/use_sim_time" value="false"/>
+  
+  <arg name="mpc_frequency" value="10" />
+  <arg name="pre_step"      value="20" />
+  <arg name="step_time"     value="0.2" />
+  <!-- can choose None 0, MPC-DC 1, MPC-SCBF 2, MPC-DCBF 3, MPC-ACBF 4 -->
+  <arg name="controller"    value="3" />
+  <arg name="front_dis"     value="false" />
+  <arg name="front_adsm"    value="false" />
+  <arg name="static_path"   value="false" />
+
+  <!-- MPC-D-CBF规划-->
+  <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm.launch">
+    <arg name="controller_" value="$(arg controller)"/>
+    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
+    <arg name="pre_step_" value="$(arg pre_step)" />
+    <arg name="step_time_" value="$(arg step_time)" />
+  </include> -->
+
+  <!-- MPC-CBF C++版本 -->
+  <include file="$(find mpc_dcbf)/launch/mpc_adsm_c.launch">
+    <arg name="controller_" value="$(arg controller)"/>
+    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
+    <arg name="pre_step_"   value="$(arg pre_step)" />
+    <arg name="step_time_"  value="$(arg step_time)" />
+    <arg name="odometry_topic" value="/robot1/odom" />
+    <arg name="obs_topic"   value="/globalFsm_by_adsm/obs_predict_pub" />
+    <arg name="cmd_topic_"  value="robot1/cmd_vel" />
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_plan.rviz" />
+
+</launch>

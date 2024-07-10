@@ -25,11 +25,14 @@
 9. 24-04-01 完成 `obstacles_param.yaml`中6个场景的障碍物设置
 10. 24-04-10 完成6个场景的数据收集
 11. 24-04-22 增加Gazebo仿真环境实验 `start_gazebo_env.launch`启动gazebo的环境
+12. 24-05-13 增加mpc-cbf C++版本，以及全家规划的状态机
+13. 24-07-10 增加mpc-cbf one-horizen实验脚本 `acbf0_one_horizen.launch`启动仿真环境；
 
 注意
 ----
 
 数值实验
+
 - 修改MPC的预测步数N，预测步长Ts，需要同步修改vomp_planner文件夹中 `obs_manager.hpp`中障碍物预测发布函数，mpc_dcbf文件夹中 `mpc_acbf.py`文件中MPC制定函数；当修改了预测补偿Ts，需要修改mpc_dcbf文件夹中 `global_path_by_rviz.cpp`中step的设置
 - 关于前端全局路径搜索参数需要在plan_global_traj.launch文件中修改
 - 切换前端路径搜索-安全约束的参数设置在 `plan_global_traj.launch`的文件中，同时路径搜索的主要函数在 `theta_astar.cpp`文件中
@@ -37,9 +40,11 @@
 - 测试使用到的文件是 `acbf_planning.launch`以及 `start_test.launch`，在前者主要设置 `controller`，`front_dist`，`front_adsm`两个参数用于切换不同的方法，后者设置 `/data/record_sign`用于切换是否启动数据记录
 - 录制完bag后，需要使用launch文件启动播bag指定话题，在 `show_mpc_traj.launch文件中`
 - 注意对不同的方法需要使用不同的颜色展示轨迹，在 `acbf_planning.launch`文件的 `odom_traj_visualization_node`节点进行颜色配置
-- 
+- 在 `traj_planner/plan_global_fsm.launch文件中增加了`param name="fsm/static_path"`参数 用于切换动态、静态的前端全局参考轨迹;`
+
 Gazebo仿真实验
-- 播放bag时,需要在`start_perception.launch`和`exp_start_test.launch`文件中的`/use_sim_time`设置为`true`-这样才会使bag里的系统时间与本机的gazebo仿真时间匹配上
-- 在`start_gazebo_env.launch`中启动gazebo仿真环境，其中加载机器人模型时会发布机器人在gazebo中的odometry真值`/Odometry`以及发布TF坐标(odom-basklink)，但因为fast-lio模块也会发布TF坐标变换信息（world-camera, body-basklink）可能会有冲突，所以需要在机器人启动节点那设置`use_fast_lio_`符号位设置为`true`
+
+- 播放bag时,需要在 `start_perception.launch`和 `exp_start_test.launch`文件中的 `/use_sim_time`设置为 `true`-这样才会使bag里的系统时间与本机的gazebo仿真时间匹配上
+- 在 `start_gazebo_env.launch`中启动gazebo仿真环境，其中加载机器人模型时会发布机器人在gazebo中的odometry真值 `/Odometry`以及发布TF坐标(odom-basklink)，但因为fast-lio模块也会发布TF坐标变换信息（world-camera, body-basklink）可能会有冲突，所以需要在机器人启动节点那设置 `use_fast_lio_`符号位设置为 `true`
 
 ---

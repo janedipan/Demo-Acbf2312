@@ -1,0 +1,83 @@
+<launch>
+
+  <param name="/use_sim_time" value="true"/>
+  
+  <arg name="mpc_frequency" value="10" />
+  <arg name="pre_step"      value="20" />
+  <arg name="step_time"     value="0.2" />
+  <!-- can choose None 0, MPC-DC 1, MPC-SCBF 2, MPC-DCBF 3, MPC-ACBF 4 -->
+  <arg name="controller"    value="3" />
+  <arg name="front_dis"     value="true" />
+  <arg name="front_adsm"    value="false" />
+  <arg name="static_path"   value="false" />
+
+  <arg name="search_horizon" value="8.0" />
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_z" default="3.0"/>
+
+  <!-- 随机地图仿真环境（静态） -->
+  <include file="$(find map_generator)/launch/map.launch">
+    <arg name="rviz_vis"    value="false"/>
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="c_num"       value="0"/>
+    <arg name="p_num"       value="1"/>
+  </include>
+
+  <!-- 差速机器人可视化 -->
+  <include file="$(find robot_simulator)/launch/vis_scout_using_odometry.launch">
+    <arg name="odometry_topic" value="/robot1/odom"/>
+  </include>
+
+  <!-- global_path searching -->
+  <include file="$(find traj_planner)/launch/plan_global_fsm.launch">
+    <arg name="odometry_topic"          value="/robot1/odom"/>
+    <arg name="cloud_topic"             value="/velodyne_points_world_no_use"/>
+    <arg name="_perception_GroundTruth" value="false"/>
+    <arg name="pre_step_"         value="$(arg pre_step)" />
+    <arg name="step_time_"        value="$(arg step_time)" />
+    <arg name="used_DIS_"         value="$(arg front_dis)" />
+    <arg name="used_adsm_"        value="$(arg front_adsm)" />
+    <arg name="used_static_path"  value="$(arg static_path)" />
+    <arg name="traj_horizon"      value="$(arg search_horizon)" />
+  </include>
+
+  <!-- 历史轨迹可视化 -->
+  <!-- 1,0,0,0.3 红色adsm+acbf; 0,0,1,0.3 蓝色none+acbf; 1,0,1,0.3 粉色none+dcbf; 1,0,1,0.3 紫色 -->
+  <!-- <node pkg="swarm_test" type="odom_traj_visualization_node" name="odom_traj_visualization_node">
+    <remap from="/odometry" to="/robot1/odom"/>
+    <param name="odom_traj_vis/line_width"     value="0.05" type="double"/>
+    <param name="odom_traj_vis/color_r"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/color_g"        value="0.0" type="double"/>
+    <param name="odom_traj_vis/color_b"        value="0.0" type="double"/>
+    <param name="odom_traj_vis/color_a"        value="1.0" type="double"/>
+    <param name="odom_traj_vis/show_odom_size" value="1000" type="int"/>
+  </node> -->
+
+  <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm_c.launch">
+    <arg name="controller_" value="$(arg controller)"/>
+    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
+    <arg name="pre_step_"   value="$(arg pre_step)" />
+    <arg name="step_time_"  value="$(arg step_time)" />
+    <arg name="odometry_topic" value="/robot1/odom" />
+    <arg name="obs_topic"   value="/globalFsm_by_adsm/obs_predict_pub" />
+    <arg name="cmd_topic_"  value="/robot1/cmd_vel" />
+  </include> -->
+
+  <!-- 命名空间调整过的 -->
+  <node name="local_planner" pkg="mpc_dcbf" type="mpc_node_c"  >
+      <param name="mpc/controller_type" value="$(arg controller)"/>
+      <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+      <param name="mpc/pre_step" value="$(arg pre_step)" />
+      <param name="mpc/step_time" value="$(arg step_time)" />
+      <param name="mpc/use_initiguess"  value="false" />
+      <remap from="/Odometry" to="/robot1/odom" />
+      <remap from="/cmd_vel"  to="/robot1/cmd_vel" />
+      <remap from="/obs_Manager_node/obs_predict_pub" to="/obs_Manager_node/obs_predict_pub" />
+      <remap from="/local_path" to="/local_path" />
+  </node>
+  <!-- <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_plan.rviz" /> -->
+
+</launch>

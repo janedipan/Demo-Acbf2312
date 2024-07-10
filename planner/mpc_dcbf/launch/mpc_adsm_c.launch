@@ -1,16 +1,20 @@
 <launch>
-    <arg name="mpc_frequency_" default="10" />
+    <arg name="mpc_frequency_" default="5" />
     <arg name="pre_step_"   default="20"/>
     <arg name="step_time_"  default="0.2"/>
 
     <arg name="controller_" default="3" />
-    <arg name="odometry_topic" default="/odometry"/>
-    <arg name="cmd_topic" default="/cmd_vel"/>
+    <arg name="odometry_topic" default="/Odometry"/>
+    <arg name="cmd_topic_" default="/cmd_vel"/>
+    <arg name="obs_topic" default="/obs_Manager_node/obs_predict_pub" />
+    <arg name="initguess" default="true"/>
+
+    <arg name="path_vis_topic" default="/local_path" />
 
     <!-- 动态障碍物仿真环境 -->
-    <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle.launch">
+    <!-- <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle.launch">
         <arg name="num_of_obs" value="3" /> 
-    </include>
+    </include> -->
 
     <!-- mpc-cbf局部规划C++版本 -->
     <node name="local_planner" pkg="mpc_dcbf" type="mpc_node_c" output="screen">
@@ -18,8 +22,12 @@
         <param name="mpc_frequency" value="$(arg mpc_frequency_)" />
         <param name="pre_step" value="$(arg pre_step_)" />
         <param name="step_time" value="$(arg step_time_)" />
+        <param name="use_initiguess"  value="$(arg initguess)" />
         <remap from="/Odometry" to="$(arg odometry_topic)" />
-        <remap from="/cmd_vel"  to="$(arg cmd_topic)" />
+        <remap from="/cmd_vel"  to="$(arg cmd_topic_)" />
+        <remap from="/obs_Manager_node/obs_predict_pub" to="$(arg obs_topic)" />
+        <remap from="/local_path" to="$(arg path_vis_topic)" />
+        
     </node>
 
     <!-- MPC-D-CBF局部规划python版本-->

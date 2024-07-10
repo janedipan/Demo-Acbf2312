@@ -3,8 +3,8 @@
 
   <arg name="rviz" default="true" />
   <arg name="robot_odom_topic"  default="/Odometry" />
-  <arg name="robot_imu_topic"   default="/imu_raw" />
-  <arg name="robot_point_topic"   default="/imu_raw" />
+  <arg name="robot_imu_topic"   default="/robot1/imu/data" />
+  <arg name="robot_point_topic"   default="/robot1/velodyne_points" />
 
   <rosparam command="load" file="$(find fast_lio)/config/velodyne.yaml" />
 
@@ -16,13 +16,14 @@
   <param name="cube_side_length" type="double" value="1000" />
   <param name="runtime_pos_log_enable" type="bool" value="0" />
   <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping" output="screen" >
+    <!-- 待发布的odometry话题， 待接收的imu，plc话题 -->
     <remap from="/Odometry"         to="$(arg robot_odom_topic)"/>
     <remap from="/imu_raw"          to="$(arg robot_imu_topic)"/>
     <remap from="/velodyne_points"  to="$(arg robot_point_topic)"/>
   </node> 
 
   <group if="$(arg rviz)">
-    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" />
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fast_lio)/rviz_cfg/exp_test.rviz" />
   </group>
 
 </launch>

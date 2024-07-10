@@ -29,7 +29,7 @@ public:
     void init_solver(std::string _Sm, double& _Ts, int& _Ns, 
                         double _v_max, double _v_min, double _o_max, 
                         std::vector<double> _Q, std::vector<double> _R, 
-                        double _gamma, double _safe_dist);
+                        double _gamma, double _safe_dist, bool sign);
     bool imp_solve(Eigen::VectorXd* param1, Eigen::MatrixXd* param2, Eigen::MatrixXd* param3);
     std::vector<double> predict_x, predict_u;
     std::vector<double> getFirstUp();
@@ -49,6 +49,7 @@ private:
     std::vector<double> R_p;    // R矩阵对角线元素
     // casadi::DM Q_;              // Q矩阵
     // casadi::DM R_;              // R矩阵
+    bool use_initguess_s;
 
     casadi::Opti prob;
     casadi::MX X_k;
@@ -65,7 +66,10 @@ private:
     int obs_num;                                    // 障碍物的数量
     bool exceed_ob(Eigen::VectorXd _obs_p);         // 障碍物筛选函数
     void rotate_solution();                         // 求解失败时滚动操作
+    std::vector<std::vector<double>> rotate_solution1(std::vector<double> x_arr, std::vector<double> u_arr);
     casadi::MX h1(casadi::MX& _curpos, Eigen::VectorXd _obs);
+    casadi::MX h2(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _vr, casadi::MX& _tau);
+    casadi::MX set_tau(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _vr);
 };
 
 
@@ -80,6 +84,8 @@ private:
     double replan_period_;
     double Ts_;
     int N_;
+    int N_i; //对goal_state进行扩展
+    bool use_initguess;
 
     Eigen::VectorXd cur_state_;
     Eigen::MatrixXd global_path_;

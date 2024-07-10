@@ -1,0 +1,17 @@
+<launch>
+    <param name="/use_sim_time" value="false"/>
+
+    <!-- fast-lio状态估计模块 -->
+    <include file="$(find fast_lio)/launch/mapping_velodyne_use.launch">
+        <arg name="rviz" value="false"/>
+        <arg name="robot_odom_topic"    value="/Odometry" />
+        <!-- ********************使用gazebo仿真数据***************** -->
+        <arg name="robot_imu_topic"     value="/robot1/imu/data" />
+        <arg name="robot_point_topic"   value="/robot1/velodyne_points" />
+    </include>
+
+    <!-- fast-lio中有自己建立camera_init2body的坐标变换的处理 -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world2camera"       args="0.0 0.0 0.0 0.0 0.0 0.0 world camera_init" output="screen" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="bodyLinkbaselink"   args="0.0 0.0 0.0 0.0 0.0 0.0 body base_link" output="screen" />
+
+</launch>

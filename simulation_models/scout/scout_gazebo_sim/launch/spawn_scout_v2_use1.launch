@@ -52,7 +52,7 @@
 
     <!-- 发布tf坐标，odometry真值 -->
     <node name="publish_robot1" pkg="scout_gazebo_sim" type="scout_odom_tf1.py" output="screen" >
-        <remap from="/state_ukf/odom1" to="/Odometry"/>
+        <remap from="/state_ukf/odom1" to="/robot1/odom"/>
         <param name="robot_namespace"   type="string"   value="$(arg robot_namespace1)" />
         <param name="use_fast_lio"      value="$(arg use_fast_lio_)" type="bool" />
     </node> 

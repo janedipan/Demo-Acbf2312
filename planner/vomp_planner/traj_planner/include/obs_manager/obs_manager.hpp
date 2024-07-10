@@ -44,9 +44,11 @@ public:
   void init(ros::NodeHandle &nh)   // Obs_Manager初始化
   {
     nh.param("obs_manager/use_GroundTruth", is_use_GroundTruth, true);
-    nh.param("/obs_Manager_node/pre_step_", pre_step, 25);
-    nh.param("/obs_Manager_node/step_time_", step_time, 0.1);
+    nh.param("obs_manager/pre_step", pre_step, 25);
+    nh.param("obs_manager/step_time", step_time, 0.1);
 
+    ROS_WARN("obs_manager pre_step is: %d", pre_step);
+    ROS_WARN("obs_manager step_time is: %f", step_time);
     // 使用障碍物轨迹真值或障碍物预测轨迹
     if (is_use_GroundTruth) {
       obsTraj_sub = nh.subscribe("/trajs", 100, &Obs_Manager::obsTrajCallback, this);
@@ -447,6 +449,10 @@ private:
       double time_out = (time_now - traj_iter->second.start_time).toSec();
 
       if(time_out >= 3.0 - 1e-3 && traj_iter != obstalce_trajs_.end()) {  // 删除超时的障碍物轨迹
+        // ROS_INFO("traj_ID is:%d",traj_iter->first);
+        // ROS_INFO("over time_now is:%f", time_now.toSec());
+        // ROS_INFO("over traj_time_start is:%f", traj_iter->second.start_time.toSec());
+        ROS_INFO("ove delay time is: %f", time_out);
         elements_to_remove.push_back(traj_iter);
       }
     }
@@ -465,7 +471,7 @@ private:
     pub_DCBF_traj();
 
     // 发布TEB的预测轨迹消息
-    pub_TEB_traj();
+    // pub_TEB_traj();
   }
 
   // --------------------动态感知得出障碍物预测轨迹
@@ -502,6 +508,7 @@ private:
     for (auto traj_iter = obstalce_trajs_.begin(); traj_iter != obstalce_trajs_.end(); traj_iter++) {
       double time_out = time_now.toSec() - traj_iter->second.Time0;
       if(time_out >= 1.0 - 1e-3 && traj_iter != obstalce_trajs_.end()) {  // 删除超时的障碍物轨迹
+        ROS_INFO("over time is:%f", time_out);
         elements_to_remove.push_back(traj_iter);
       }
     }
@@ -539,7 +546,7 @@ private:
     pub_DCBF_traj();
 
     // 发布TEB的预测轨迹消息
-    pub_TEB_traj();
+    // pub_TEB_traj();
   }
 
 };

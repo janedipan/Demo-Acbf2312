@@ -1,0 +1,23 @@
+<launch>
+    <param name="/use_sim_time" value="true"/>
+    
+    <!-- tmp_2024-04-20-12-36-35路径生成 tmp_2024-04-20-12-39-53自主导航1 tmp_2024-04-20-12-43-27自主导航2 -->
+    <arg name="bag_name1" value="tmp_2024-04-20-12-43-27自主导航2.bag"/>
+
+    <node pkg="rosbag" type="play" name="player1" args="--pause --clock /home/pj/jane_ws-github/dynamic_avoidance/bag/real_word/0420/$(arg bag_name1)" >
+        <remap from="/imu_raw"          to="/robot1/imu/data"/>
+        <remap from="/velodyne_points"  to="/robot1/velodyne_points"/>
+    </node>
+
+    <!-- <node pkg="robot_simulator" type="scout_visualizer_node" name="scout_visualizer_node1" output="screen">
+        <param name="ugv/mesh" value="package://robot_simulator/param/scout2.STL" type="string"/>
+        <remap from="~odometry" to="/odometry1"/>
+        <remap from="~odom_mesh" to="robot_mesh1"/>
+        <param name="ugv/color_r" value="0.0" type="double"/>
+        <param name="ugv/color_g" value="0.0" type="double"/>
+        <param name="ugv/color_b" value="1.0" type="double"/>
+        <param name="ugv/color_a" value="0.3" type="double"/>
+    </node> -->
+
+    <!-- <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/exp_real_bag.rviz" /> -->
+</launch>

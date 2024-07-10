@@ -1,0 +1,98 @@
+<!-- 该脚本用于实现小论文中one-horizen统一基准实验 -->
+<!-- 1.mpc单次计算 2.在统一场景下不同方法的轨迹实时变化 3.修改障碍物的布置（尺寸，位置） -->
+<launch>
+
+  <param name="/use_sim_time" value="false"/>
+  
+  <arg name="mpc_frequency" value="0.5" />
+  <arg name="pre_step"      value="80" />
+  <arg name="step_time"     value="0.1" />
+  <!-- can choose None 0, MPC-DC 1, MPC-SCBF 2, MPC-DCBF 3, MPC-ACBF 4 -->
+  <arg name="controller"    value="3" />
+  <arg name="front_dis"     value="false" />
+  <arg name="front_adsm"    value="false" />
+  <arg name="static_path"   value="false" />
+
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_z" default="3.0"/>
+
+
+  <!-- 随机地图仿真环境 -->
+  <include file="$(find map_generator)/launch/map.launch">
+    <arg name="rviz_vis"    value="false"/>
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="c_num"       value="0"/>
+    <arg name="p_num"       value="1"/>
+  </include>
+
+  <!-- 差速机器人数值仿真 -->
+  <include file="$(find robot_simulator)/launch/scout_simulator.xml">
+    <arg name="ugv_id"         value="1"/>
+    <arg name="time_res_"      value="0.02"/>   <!-- 仿真时间精度-->
+    <arg name="init_x_"        value="0.0"/>
+    <arg name="init_y_"        value="0.0"/>
+    <arg name="init_z_"        value="0.2"/>
+    <arg name="map_size_x_"    value="$(arg map_size_x)"/>
+    <arg name="map_size_y_"    value="$(arg map_size_y)"/>
+    <arg name="map_size_z_"    value="$(arg map_size_z)"/>
+    <arg name="odometry_topic" value="/odometry" />
+    <arg name="mesh_topic"     value="vis_mesh" />
+  </include>
+
+  <node name="mpc_horizen0" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="0"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/show_obs"  value="true" />
+
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path0" />
+  </node>
+
+
+  <node name="mpc_horizen1" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="1"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/use_initiguess"  value="false" />
+    
+
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path1" />
+  </node>
+
+
+  <node name="mpc_horizen2" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="3"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.25" />
+    <!-- <param name="mpc/show_obs"  value="true" /> -->
+
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path2" />
+  </node>
+
+
+  <node name="mpc_horizen3" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="4"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.25" />
+    <param name="mpc/tau_scale" value="0.3" />
+    
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path3" />
+  </node>
+
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_horizen.rviz" />
+
+</launch>

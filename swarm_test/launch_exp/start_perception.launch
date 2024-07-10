@@ -2,19 +2,6 @@
     <!-- 使用rosbag时, 必须设置为true; 实物实验请设置为false -->
     <param name="/use_sim_time" value="true"/>
 
-    <!-- fast-lio状态估计模块 -->
-    <include file="$(find fast_lio)/launch/mapping_velodyne_use.launch">
-        <arg name="rviz" value="false"/>
-        <arg name="robot_odom_topic"    value="/robot1/odom" />
-        <!-- ********************使用gazebo仿真数据***************** -->
-        <arg name="robot_imu_topic"     value="/robot1/imu/data" />
-        <arg name="robot_point_topic"   value="/robot1/velodyne_points" />
-    </include>
-
-    <!-- fast-lio中有自己建立camera_init2body的坐标变换的处理 -->
-    <node pkg="tf2_ros" type="static_transform_publisher" name="world2camera"       args="0.0 0.0 0.0 0.0 0.0 0.0 world camera_init" output="screen" />
-    <node pkg="tf2_ros" type="static_transform_publisher" name="bodyLinkbaselink"   args="0.0 0.0 0.0 0.0 0.0 0.0 body robot1/base_link" output="screen" />
-
     <!-- 启动动态感知模块 -->
     <rosparam file="$(find dynamic_perception)/cfg/params_lshape.yaml" command="load" /> 
     <!-- 启动DBSCAN聚类 -->
@@ -36,5 +23,5 @@
         <param name="/obstacle_prediction_node/meters_to_create_new_track" value="1.0" type="double"/>
     </node>
 
-    <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_gazebo_sim)/config/single_scout.rviz" /> -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_gazebo_sim)/config/single_scout.rviz" />
 </launch>

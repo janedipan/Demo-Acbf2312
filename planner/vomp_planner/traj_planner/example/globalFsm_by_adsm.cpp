@@ -159,6 +159,7 @@ void maintenance_fsm(const ros::TimerEvent& e)
         // 离线轨迹执行
         // std::cout<< "............ exce_traj .............\n";
         ros::Time t_cur = ros::Time::now();
+        // ROS_INFO("fsm:time is: %f", t_cur.toSec());
         // 根据时间获取当前全局参考路径的路点
         Eigen::Vector2d pos = planner_manager_.evaluateFrontPose(t_cur, timelist);
         // std::cout<< "............ here0 .............\n";
@@ -186,7 +187,7 @@ void maintenance_fsm(const ros::TimerEvent& e)
     case 4:
     {
         // 重规划模式
-        std::cout<< "\033[33m............ replan_traj .............\033[0m\n";
+        // std::cout<< "\033[33m............ replan_traj .............\033[0m\n";
         start_pt_ = cur_pt_;
         // start_vel_ = cur_vel_;
         double init_vel = v_max;
@@ -195,7 +196,7 @@ void maintenance_fsm(const ros::TimerEvent& e)
         
         start_acc_.setZero();
         start_yaw_ = cur_yaw_;
-        std::cout<< start_vel_<< std::endl;
+        // std::cout<< start_vel_<< std::endl;
         plan_success = planner_manager_.hybridReplanFsm(start_pt_, start_vel_, start_acc_, end_pt_, end_vel_, start_yaw_);     
         if(plan_success){
             trajlist = planner_manager_.getGlobalPath(step_time);
@@ -213,14 +214,17 @@ void maintenance_fsm(const ros::TimerEvent& e)
     }   
 }
 
+
 int main(int argc, char** argv){
     ros::init(argc, argv, "global_fsm_by_adsm");
     ros::NodeHandle nh("~");
 
-    nh.param("/globalFsm_by_adsm/step_time", step_time, 0.1);
+    nh.param("obs_manager/step_time", step_time, 0.1);
     nh.param("fsm/thresh_replan", replan_thresh1, -1.0);
     nh.param("fsm/thresh_no_replan", replan_thresh2, -1.0);
     nh.param("fsm/static_path", static_path, false);
+    ROS_WARN("[Test_demo]: global_path step_time is %f", step_time);
+    if(static_path) ROS_WARN("[Test_demo]: use static global path");
     plan_num    = 1.0;
     average_time= 0.0;
     total_time  = 0.0;

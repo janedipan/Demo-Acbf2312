@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   nav_msgs
   std_msgs
+  visualization_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -56,4 +57,14 @@ target_link_libraries(mpc_node_c
   casadi
 )
 
+add_executable(mpc_horizen
+  src/mpc_horizen_node.cpp
+)
+
+target_link_libraries(mpc_horizen
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${EIGEN3_INCLUDE_DIR}
+  casadi
+)
 

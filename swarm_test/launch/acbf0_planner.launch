@@ -9,7 +9,9 @@
   <arg name="controller"    value="3" />
   <arg name="front_dis"     value="false" />
   <arg name="front_adsm"    value="false" />
+  <arg name="static_path"   value="true" />
 
+  <arg name="search_horizon" value="21.0" />
   <arg name="map_size_x" default="50.0"/>
   <arg name="map_size_y" default="50.0"/>
   <arg name="map_size_z" default="3.0"/>
@@ -24,11 +26,6 @@
     <arg name="p_num"       value="1"/>
   </include>
 
-  <!-- 动态障碍物仿真环境 -->
-  <!-- <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle.launch">
-    <arg name="num_of_obs" value="10" />
-  </include> -->
-
   <!-- 差速机器人数值仿真 -->
   <include file="$(find robot_simulator)/launch/scout_simulator.xml">
     <arg name="ugv_id"         value="1"/>
@@ -39,18 +36,22 @@
     <arg name="map_size_x_"    value="$(arg map_size_x)"/>
     <arg name="map_size_y_"    value="$(arg map_size_y)"/>
     <arg name="map_size_z_"    value="$(arg map_size_z)"/>
-    <arg name="odometry_topic" value="/odometry" />
+    <arg name="odometry_topic" value="/robot1/odom" />
     <arg name="mesh_topic"     value="vis_mesh" />
   </include>
 
-  <!-- 启动障碍物管理 -->
-  <node pkg="traj_planner" type="obs_Manager_node" name="obs_Manager_node" output="screen">
-    <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
-    <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
-    <param name="/obs_manager/use_GroundTruth"  value="true" type="bool"/>
-    <param name="pre_step_" value="$(arg pre_step)" />
-    <param name="step_time_" value="$(arg step_time)"/>
-  </node>
+  <!-- global_path searching -->
+  <include file="$(find traj_planner)/launch/plan_global_fsm.launch">
+    <arg name="odometry_topic"          value="/robot1/odom"/>
+    <arg name="cloud_topic"             value="/velodyne_points_world_no_use"/>
+    <arg name="_perception_GroundTruth" value="true"/>
+    <arg name="pre_step_"         value="$(arg pre_step)" />
+    <arg name="step_time_"        value="$(arg step_time)" />
+    <arg name="used_DIS_"         value="$(arg front_dis)" />
+    <arg name="used_adsm_"        value="$(arg front_adsm)" />
+    <arg name="used_static_path"  value="$(arg static_path)" />
+    <arg name="traj_horizon"      value="$(arg search_horizon)" />
+  </include>
 
   <!-- 走廊可视化 -->
   <node pkg="swarm_test" type="corridor_visualization_node" name="corridor_visualization_node">
@@ -63,7 +64,7 @@
 
   <!-- 1,0,0,0.3 红色adsm+acbf; 0,0,1,0.3 蓝色none+acbf; 1,0,1,0.3 粉色none+dcbf; 1,0,1,0.3 紫色 -->
   <node pkg="swarm_test" type="odom_traj_visualization_node" name="odom_traj_visualization_node">
-    <remap from="/odometry" to="/odometry"/>
+    <remap from="/odometry" to="/robot1/odom"/>
     <param name="odom_traj_vis/line_width"     value="0.05" type="double"/>
     <param name="odom_traj_vis/color_r"        value="1.0" type="double"/>
     <param name="odom_traj_vis/color_g"        value="0.0" type="double"/>
@@ -72,15 +73,14 @@
     <param name="odom_traj_vis/show_odom_size" value="1000" type="int"/>
   </node>
 
-  <!-- global_path searching -->
-  <include file="$(find traj_planner)/launch/plan_global_fsm.launch">
-    <arg name="odometry_topic"          value="/odometry"/>
-    <arg name="cloud_topic"             value="/velodyne_points_world_no_use"/>
-    <arg name="_perception_GroundTruth" value="true"/>
-    <arg name="step_time_"        value="$(arg step_time)" />
-    <arg name="used_DIS_"          value="$(arg front_dis)" />
-    <arg name="used_adsm_"         value="$(arg front_adsm)" />
-  </include>
+  <!-- 启动障碍物管理 -->
+  <!-- <node pkg="traj_planner" type="obs_Manager_node" name="obs_Manager_node" output="screen">
+    <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
+    <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
+    <param name="/obs_manager/use_GroundTruth"  value="true" type="bool"/>
+    <param name="pre_step_" value="$(arg pre_step)" />
+    <param name="step_time_" value="$(arg step_time)"/>
+  </node> -->
 
   <!-- MPC-D-CBF规划-->
   <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm.launch">
@@ -94,8 +94,11 @@
   <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm_c.launch">
     <arg name="controller_" value="$(arg controller)"/>
     <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
-    <arg name="pre_step_" value="$(arg pre_step)" />
-    <arg name="step_time_" value="$(arg step_time)" />
+    <arg name="pre_step_"   value="$(arg pre_step)" />
+    <arg name="step_time_"  value="$(arg step_time)" />
+    <arg name="odometry_topic" value="/robot1/odom" />
+    <arg name="obs_topic"   value="/globalFsm_by_adsm/obs_predict_pub" />
+    <arg name="cmd_topic_"  value="/cmd_vel1" />
   </include> -->
 
   <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_plan.rviz" />

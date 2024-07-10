@@ -1,11 +1,8 @@
 <launch>
   <!-- 使用rosbag时, 必须设置为true; 实物实验请设置为false -->
-  <param name="/use_sim_time" value="false"/>
-
-    <arg name="gazebo"          default="true" />
-    <arg name="gzclient"        default="true"/>
-    <arg name="use_teleop_key"  default="true"/>
-    <arg name="num_of_obs"  default="2" />       <!-- 障碍物数量 -->
+    <!-- <param name="/use_sim_time" value="true"/> -->
+    <arg name="gzclient"        default="false"/> <!--gazebo UI 界面-->
+    <arg name="use_teleop_key"  default="false"/>
 
     <!-- 加载gazebo环境 -->
     <arg name="world_name" default="$(find scout_gazebo_sim)worlds/simple_env.world" />
@@ -13,8 +10,8 @@
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
         <arg name="paused" value="false"/>
-        <arg name="use_sim_time" value="true"/>
         <arg name="gui" value="$(arg gzclient)"/>
+        <arg name="use_sim_time" value="true"/>
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
     </include>
@@ -26,8 +23,9 @@
     </group>
 
     <!-- 加载障碍物参数 -->
-    <rosparam command="load" file="$(find dynamic_simulator)/config/obstacles_param_gazebo.yaml" />
-    <node name="dynamic_corridor" pkg="dynamic_simulator" type="generate_agents_fixed_poses_gazebo.py" args="$(arg num_of_obs) $(arg gazebo)" output="screen"/> 
+    <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle1.launch">
+        <arg name="num_of_obs" value="7" />
+    </include>    
 
     <!-- 加载机器人模型 -->
     <include file="$(find scout_gazebo_sim)/launch/spawn_scout_v2_use1.launch">
