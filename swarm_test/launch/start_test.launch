@@ -4,7 +4,7 @@
 
   <!-- 动态障碍物仿真环境 -->
   <include file="$(find dynamic_simulator)/launch/spawn_dynamic_obstacle.launch">
-    <arg name="num_of_obs" value="9" />
+    <arg name="num_of_obs" value="7" />
   </include>
 
   <!-- 发布目标点 -->
@@ -12,13 +12,19 @@
 
   <!-- 收集实验数据并输出结果 -->
   <node pkg="swarm_test" type="data_processor_node" name="data_processor_node" output="screen">
-    <remap from="/trajs_predicted"              to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
-    <remap from="/trajs"                        to="/Dyn_Obs_trajs"/>
-    <param name="/obs_manager/use_GroundTruth"  value="true"  type="bool"/>
-    <param name="/data/record_sign"             value="false" type="bool"/>
+    <remap from="/trajs_predicted"  to="/obstacle_prediction_node/obstacle_prediction/trajs_predicted"/>
+    <remap from="/trajs"    to="/Dyn_Obs_trajs"/>
+    <remap from="/odometry" to="/robot1/odom"/>
+    <param name="/use_GroundTruth"  value="true"  type="bool"/>
+    <param name="/scenario" value="3" type="int" />
+    <param name="/controller" value="6" type="int" />
+    <param name="/data/record_sign" value="false"  type="bool"/>
+    <param name="/data/record_sign1" value="false"  type="bool"/>
   </node>
 
   <!-- rosbag录制 -->
-	<!-- <node pkg="rosbag" type="record" name="bag_record" args="-a -o /home/pj/jane_ws-github/dynamic_avoidance/bag/tmp.bag"/> -->
+	<!-- <node pkg="rosbag" type="record" name="bag_record" args="-a -o /home/pj/jane_ws-github/dynamic_avoidance/bag/0729/tmp.bag"/> -->
+	<!-- <node pkg="rosbag" type="record" name="bag_record" args="-o /home/pj/jane_ws-github/dynamic_avoidance/bag/0725/gazebo-s3/tmp.bag /odom_traj /robot1/odom"/> -->
 
 </launch>
+

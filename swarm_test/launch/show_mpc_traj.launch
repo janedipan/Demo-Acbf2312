@@ -1,12 +1,13 @@
 <launch>
     <param name="/use_sim_time" value="false"/>
 
-    <arg name="bag_name1" value="adsm+acbf6-0411.bag"/>
-    <arg name="bag_name2" value="none+acbf6-0411.bag"/>
+    <arg name="bag_name1" value="tmp_a_acbf.bag"/>
+    <arg name="bag_name2" value="tmp_2.bag"/>
 
-    <node pkg="rosbag" type="play" name="player1" args="--clock /home/pj/jane_ws-github/dynamic_avoidance/bag/$(arg bag_name1) --topic /odom_traj /odometry /corridor_vis" >
+    <!-- topic /odom_traj /robot1/odom /corridor_vis -->
+    <node pkg="rosbag" type="play" name="player1" args="--clock /home/pj/jane_ws-github/dynamic_avoidance/bag/0725/gazebo-s1/$(arg bag_name1) " >
         <remap from="/odom_traj" to="/odom_traj1"/>
-        <remap from="/odometry" to="/odometry1"/>
+        <remap from="/robot1/odom" to="/odometry1"/>
     </node>
 
     <node pkg="robot_simulator" type="scout_visualizer_node" name="scout_visualizer_node1" output="screen">
@@ -19,18 +20,18 @@
         <param name="ugv/color_a" value="0.3" type="double"/>
     </node>
 
-    <node pkg="rosbag" type="play" name="player2" args="--clock /home/pj/jane_ws-github/dynamic_avoidance/bag/$(arg bag_name2) --topic /odom_traj /odometry /obs_Manager_node/obs_traj_vis /obstacles_mesh">
+    <node pkg="rosbag" type="play" name="player2" args="--clock /home/pj/jane_ws-github/dynamic_avoidance/bag/0725/gazebo-s1/$(arg bag_name2) --topic /odom_traj /robot1/odom" >
         <remap from="/odom_traj" to="/odom_traj2"/>
-        <remap from="/odometry" to="/odometry2"/>
+        <remap from="/robot1/odom" to="/odometry2"/>
     </node>
 
     <node pkg="robot_simulator" type="scout_visualizer_node" name="scout_visualizer_node2" output="screen">
         <param name="ugv/mesh" value="package://robot_simulator/param/scout2.STL" type="string"/>
         <remap from="~odometry" to="/odometry2"/>
         <remap from="~odom_mesh" to="robot_mesh2"/>
-        <param name="ugv/color_r" value="0.4" type="double"/>
-        <param name="ugv/color_g" value="0.0" type="double"/>
-        <param name="ugv/color_b" value="0.8" type="double"/>
+        <param name="ugv/color_r" value="0.0" type="double"/>
+        <param name="ugv/color_g" value="1.0" type="double"/>
+        <param name="ugv/color_b" value="0.0" type="double"/>
         <param name="ugv/color_a" value="0.3" type="double"/>
     </node>
 

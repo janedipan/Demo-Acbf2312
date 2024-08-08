@@ -22,7 +22,7 @@ int controller;
 std::string Smetric_type;
 double replan_period_;
 double Ts_;
-int N_;
+int N_, tau_N_;
 bool use_initguess, show_obs;
 int N_i;
 double v_max, omega_max, safe_dist;
@@ -162,25 +162,44 @@ casadi::Function setKinematicEquation() {
     return casadi::Function("kinematic_equation", {state_vars, control_vars}, {rhs});
 }
 
-casadi::MX set_tau(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _vr){
-    casadi::MX tau_;
-    double obs_r = _obs(2);
+casadi::MX set_tau(casadi::MX& _curpos, Eigen::VectorXd _obs){
+    double obs_r = _obs[2];
     std::vector<double> obs_p_v(_obs.data(), _obs.data()+2);
     casadi::DM d_obs_p(obs_p_v);
     casadi::MX obs_p = casadi::MX::reshape(d_obs_p, 2, 1);
+
+    std::vector<double> obs_v_v(_obs.data()+5, _obs.data()+7);
+    casadi::DM d_obs_v(obs_v_v);
+    casadi::MX obs_v = casadi::MX::reshape(d_obs_v, 2, 1);
+
     casadi::MX ro_p     = _curpos(casadi::Slice(0, 2),0);
+    casadi::MX ro_v     = _curpos(casadi::Slice(3,5),0);
 
     casadi::MX pr   = obs_p - ro_p;
-    casadi::MX vr   = _vr;
-    casadi::MX tau_max = (casadi::MX::norm_2(pr)-obs_r)*
+    casadi::MX vr   = obs_v - ro_v;
+    casadi::MX tau_max = (casadi::MX::norm_2(pr)-obs_r-0.4*1.0)*
                             casadi::MX::norm_2(pr)/casadi::MX::dot(pr,vr);
-    // 判断tau值符号
     casadi::MX tau_0 = casadi::MX::if_else(casadi::MX::dot(pr,vr)<0.0, -tau_max, 0.0);
-    // tau值取上界
     casadi::MX tau_u = casadi::MX::if_else(tau_0<2.0, tau_0, 2.0);
-    // tau值
-    casadi::MX tau_d = casadi::MX::if_else(casadi::MX::norm_2(pr)-obs_r>0.1*1.3, tau_u, 0);
+    // casadi::MX tau_d = casadi::MX::if_else(tau_u>0.4, tau_u, 0.0);
+    casadi::MX tau_d = casadi::MX::if_else(casadi::MX::norm_2(pr)-obs_r-safe_dist>0.1*1.3, tau_u, 0);
     return tau_d;
+}
+
+double set_tau_value(Eigen::VectorXd _rob, Eigen::VectorXd _obs){
+    double obs_r = _obs[2];
+    Eigen::Vector2d obs_p = _obs.block<2,1>(0,0);
+    Eigen::Vector2d rob_p = _rob.block<2,1>(0,0);
+    Eigen::Vector2d obs_v = _obs.block<2,1>(5,0);
+    // Eigen::Vector2d rob_v = _rob.block<2,1>(3,0);
+    Eigen::Vector2d rob_v = {1.0, 0.0};
+    Eigen::Vector2d pr = obs_p - rob_p;
+    Eigen::Vector2d vr = obs_v - rob_v;
+
+    double tau_max = (pr.norm()-obs_r-0.1*1.0)*pr.norm()/pr.dot(vr);
+    double tau_0 = pr.dot(vr)<0.0? -tau_max : 0.0;
+    double tau_u = pr.norm()-obs_r-0.4<1.5? 0.0 : tau_0;
+    return tau_u;
 }
 
 casadi::MX h1(casadi::MX& _curpos, Eigen::VectorXd _obs){
@@ -190,18 +209,30 @@ casadi::MX h1(casadi::MX& _curpos, Eigen::VectorXd _obs){
     return h_exp;
 }
 
-casadi::MX h2(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _vr, casadi::MX& _tau){
-    casadi::MX dx = _obs(0) - _curpos(0);
-    casadi::MX dy = _obs(1) - _curpos(1);
-    casadi::MX xv = _vr(0);    
-    casadi::MX yv = _vr(1);
+casadi::MX h2(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _tau){
+    casadi::MX dx = _obs[0] - _curpos(0);
+    casadi::MX dy = _obs[1] - _curpos(1);
+    casadi::MX xv = _obs[5] - _curpos(3);   
+    casadi::MX yv = _obs[6] - _curpos(4);   
     casadi::MX h_exp = casadi::MX::sqrt((dx+xv*_tau)*(dx+xv*_tau)+(dy+yv*_tau)*(dy+yv*_tau))-
                             _obs(2) - safe_dist;
     return h_exp;    
 }
 
+casadi::MX h3(casadi::MX& _curpos, Eigen::VectorXd _obs, Eigen::Vector2d _vr, double _tau){
+    casadi::MX dx = _obs[0] - _curpos(0);
+    casadi::MX dy = _obs[1] - _curpos(1);
+    double xv = _vr[0];
+    double yv = _vr[1];
+    casadi::MX h_exp = casadi::MX::sqrt((dx+xv*_tau)*(dx+xv*_tau)+(dy+yv*_tau)*(dy+yv*_tau))-
+                            _obs[2] - safe_dist;
+    return h_exp;
+}
+
 void set_safety_st(int& smetric, casadi::Opti& opt){
     if(smetric == 4){
+        double tau_value = set_tau_value(cur_state_, obs_matrix_.col(0));
+        Eigen::Vector2d vr = obs_matrix_.col(0).block<2,1>(5,7) - Eigen::Vector2d(1.0, 0.0);
         for(int i=0; i<N_-1; i++){
             casadi::MX X_   = X_k(casadi::Slice(), i);
             casadi::MX X_1  = X_k(casadi::Slice(), i+1); 
@@ -209,27 +240,22 @@ void set_safety_st(int& smetric, casadi::Opti& opt){
             casadi::MX ro_V1= X_1(casadi::Slice(3,5), 0); 
 
             Eigen::VectorXd _obs_vec(obs_matrix_.col(i));    
-            std::vector<double> obs_v_v(_obs_vec.data()+5, _obs_vec.data()+_obs_vec.size());        
-            casadi::MX obs_v = opt.parameter(2, 1);
-            opt.set_value(obs_v, obs_v_v);
-
             Eigen::VectorXd _obs_vec1(obs_matrix_.col(i+1)); 
-            std::vector<double> obs_v1_v(_obs_vec1.data()+5, _obs_vec1.data()+_obs_vec1.size());        
-            casadi::MX obs_v1 = opt.parameter(2, 1);
-            opt.set_value(obs_v1, obs_v1_v);
 
-            casadi::MX vr   = obs_v - ro_V;
-            casadi::MX vr1  = obs_v1 - ro_V1;
-            casadi::MX tau0 = set_tau(X_, obs_matrix_.col(i), vr);
-            casadi::MX tau1 = set_tau(X_1, obs_matrix_.col(i+1), vr1); 
+            casadi::MX tau0 = set_tau(X_, obs_matrix_.col(i));
+            casadi::MX tau1 = set_tau(X_1, obs_matrix_.col(i+1)); 
             tau_list(0, i) = tau0;
             double scale = tau_scale_;
-            int nums = N_*0.8;  // 0.3*100
+            // int nums = N_*0.33;  // 0.3*100
+            int nums = tau_N_;
             if(i>=nums) scale = 0.0;
             casadi::MX tau0_u = scale*tau0;
             casadi::MX tau1_u = scale*tau1;
-            casadi::MX hk   = h2(X_,    _obs_vec, vr, tau0_u);
-            casadi::MX hk1  = h2(X_1,   _obs_vec1, vr1, tau1_u);
+            double tau_re = scale*tau_value;
+            // casadi::MX hk   = h2(X_,    _obs_vec, tau0_u);
+            // casadi::MX hk1  = h2(X_1,   _obs_vec1, tau1_u);
+            casadi::MX hk = h3(X_, _obs_vec, vr, tau_re);
+            casadi::MX hk1 = h3(X_1, _obs_vec1, vr, tau_re);
             casadi::MX cbf  = -hk1 + (1-gamma_)*hk-lambda_(0,i);
             // casadi::MX cbf  = -hk1 + (1-gamma_)*hk;
             opt.subject_to(cbf <= 0);
@@ -347,10 +373,12 @@ bool imp_solve(int& smetric, Eigen::VectorXd& param1, Eigen::VectorXd& param2, E
     opt.solver("ipopt", solver_opts);
 
     try{
+        // casadi::Opti opt;
         auto solution_ = opt.solve();
         // 数值提取
         state_list = solution_.value(X_k);
-        if(smetric==4) std::cout<< "tau_value =\n"<<solution_.value(tau_list)<< "\nlambda_value =\n"<< solution_.value(lambda_)(0, casadi::Slice(0, 30))<< std::endl;;
+        // if(smetric==4) std::cout<< "tau_value =\n"<<solution_.value(tau_list)<< "\nlambda_value =\n"<< solution_.value(lambda_)(0, casadi::Slice(0, 30))<< std::endl;;
+        // if(smetric!=0) std::cout<< "MPC-"<< controller_ls[smetric]<< "tau_scale-"<< tau_scale_<<" 's opt_station is: "<< state_list(casadi::Slice(0,2), casadi::Slice())<< std::endl;
         return true;
     }
     catch(const casadi::CasadiException& e) {
@@ -391,8 +419,9 @@ int main(int argc, char* argv[]){
     nh.param("mpc/mpc_frequency",   replan_period_, 5.0);
     nh.param("mpc/step_time",       Ts_, 0.1);
     nh.param("mpc/pre_step",        N_, 25);
-    nh.param("mpc/gamma",        gamma_, 0.0);
+    nh.param("mpc/gamma",        gamma_, 0.30);
     nh.param("mpc/tau_scale",   tau_scale_, 0.0);
+    nh.param("mpc/tau_N",   tau_N_, 30);
     nh.param("mpc/use_initiguess", use_initguess, false);
     nh.param("mpc/show_obs", show_obs, false);
     N_i = N_+2;
@@ -418,7 +447,7 @@ int main(int argc, char* argv[]){
     timer_vis_      = nh.createTimer(ros::Duration(0.1), timeCallback2);
 
     ROS_WARN("MPC_Horizen_noe initialized successfully! \nSafety-metric is: %s", Smetric_type.c_str());
-    ROS_WARN("MPC predictive range is: %f, step time is: %f, gamma is: %f, tau_scale is: %f",N_*Ts_, Ts_, gamma_, tau_scale_);
+    ROS_WARN("MPC predictive range is: %f, step time is: %f, gamma is: %f, tau_scale is: %f, tau_N is: %d",N_*Ts_, Ts_, gamma_, tau_scale_, tau_N_);
     if(use_initguess) ROS_WARN("mpc use init_guess");
 
     ros::Duration(1.0).sleep();

@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
   ros::NodeHandle node;
 
-  Eigen::Vector3d goal_point(20.5, 0.0, 1.0);
+  Eigen::Vector3d goal_point(21.0, 0.0, 1.0);
 
   goal_pub = node.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 10);
 

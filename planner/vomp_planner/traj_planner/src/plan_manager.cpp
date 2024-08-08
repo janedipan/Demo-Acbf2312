@@ -172,6 +172,7 @@ bool PlanManager::hybridReplanFsm(Eigen::Vector2d start_pt, Eigen::Vector2d star
 
   search_time_end = clock();   // 结束时间
   double search_time_spend = double(search_time_end - search_time_start) / CLOCKS_PER_SEC;
+  // std::cout << "\033[35m [Vehicle "<< "]: Theta-A* cost time := " << search_time_spend*1000 << "ms \033[0m"<< std::endl;
 
   // drawKinoPath(theta_path_finder_->getKinoTraj(0.2));      // 输出前端路径可视化-Path数据类型
 

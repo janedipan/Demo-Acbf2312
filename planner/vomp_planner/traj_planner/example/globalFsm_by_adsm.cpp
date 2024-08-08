@@ -27,6 +27,8 @@ double v_max = 1.3;
 double step_time, replan_thresh1, replan_thresh2;
 double average_time, total_time, plan_num;
 
+std::vector<double> time_list;
+
 // 状态机标志位0-init, 1-wait_target, 2-gen_new_traj, 3-exec_traj, 4-replan_traj
 int _fsm_sign;
 
@@ -142,9 +144,13 @@ void maintenance_fsm(const ros::TimerEvent& e)
         start_acc_.setZero();
         start_yaw_ = cur_yaw_;
         // 初始化路径搜索
+        clock_t search_time_start = clock(); 
         plan_success = planner_manager_.hybridReplanFsm(start_pt_, start_vel_, start_acc_, end_pt_, end_vel_, start_yaw_);
+        clock_t search_time_end = clock();
         if(plan_success){
             /* change fsm from 2 to 3 */
+            double search_time = (double)(search_time_end - search_time_start) / CLOCKS_PER_SEC;
+            time_list.push_back(search_time*1000);
             trajlist = planner_manager_.getGlobalPath(step_time);
             timelist = planner_manager_.get_time_list(step_time);
             start_time_ = timelist.front();
@@ -197,8 +203,12 @@ void maintenance_fsm(const ros::TimerEvent& e)
         start_acc_.setZero();
         start_yaw_ = cur_yaw_;
         // std::cout<< start_vel_<< std::endl;
+        clock_t search_time_start = clock(); 
         plan_success = planner_manager_.hybridReplanFsm(start_pt_, start_vel_, start_acc_, end_pt_, end_vel_, start_yaw_);     
+        clock_t search_time_end = clock();
         if(plan_success){
+            double search_time = (double)(search_time_end - search_time_start) / CLOCKS_PER_SEC;
+            time_list.push_back(search_time*1000);
             trajlist = planner_manager_.getGlobalPath(step_time);
             timelist = planner_manager_.get_time_list(step_time);
             start_time_ = timelist.front();
@@ -229,6 +239,7 @@ int main(int argc, char** argv){
     average_time= 0.0;
     total_time  = 0.0;
     _fsm_sign   = 0;
+    time_list.clear();
     planner_manager_.initPlanManage(nh);
 
     odom_sub      = nh.subscribe("/odometry", 50, odomCallback);
@@ -240,7 +251,22 @@ int main(int argc, char** argv){
 
     ros::Duration(1.0).sleep();
     ROS_WARN("[Test_demo]: ready");
-    ros::spin();
+    while(ros::ok()){
+        ros::spin();
+    }
+    // int len = time_list.size();
+    // std::cout<< "--------------[Test_demo]: time_size is: "<< len << std::endl;
+    // for(int i=0; i<len; i++){
+    //     total_time += time_list[i];
+    // }
+    // average_time = total_time/len;
+    // std::cout<< "--------------[Test_demo]: average time is: "<< average_time<< "ms" << std::endl;
+    // std::cout<< "--------------[Test_demo]: time_list is:"<< std::endl;
+    // for(double t: time_list){
+    //     std::cout<< t<< ",";
+    // }
+    // std::cout<< std::endl;
+
     return 0;
 }
 

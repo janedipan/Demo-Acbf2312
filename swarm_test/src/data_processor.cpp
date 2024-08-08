@@ -30,15 +30,30 @@ double traj_time_;
 Eigen::Vector2d end_pt_;
 bool start_sign = false;
 bool end_sign   = false;
-bool record_sign;
+bool record_sign, record_sign1;
 
+std::vector<std::string> controller_ls = {
+    "None",
+    "DC",
+    "SCBF",
+    "DCBF",
+    "ACBF",
+    "C+ACBF",
+    "A+ACBF"
+};
 
 // 定义用于表格输出的数据 traj_length, traj_time, mean_vel0, mean_vel1, val_vel0, val_vel1, col_times, min_dist
 Eigen::VectorXd output_data = Eigen::VectorXd::Zero(8);
 
-std::string controller_   = "None+ACBF";   // DC, CBF, DCBF, ACBF,DC+ACBF, ADSM+ACBF
-std::string scenario      = "3";         // 0~5
-std::string file_name     = "/home/pj/jane_ws-github/dynamic_avoidance/src/swarm_test/docs/data3.csv";
+// 定义用于记录障碍物距离的向量数组
+std::vector<std::pair<double, double>> distance_to_obs_ls;
+
+
+std::string controller_name;
+int controller_; // DC, CBF, DCBF, ACBF,DC+ACBF, ADSM+ACBF
+int scenario_; // 0~5
+std::string file_name     = "/home/pj/jane_ws-github/dynamic_avoidance/src/swarm_test/docs/data0715/data.csv";
+std::string file_name1     = "/home/pj/jane_ws-github/dynamic_avoidance/src/swarm_test/docs/data0729/data.csv";
 
 void check_collision(Eigen::VectorXd distance_o, Eigen::MatrixXd *collision_o, double t_)
 {
@@ -73,6 +88,8 @@ void check_collision(Eigen::VectorXd distance_o, Eigen::MatrixXd *collision_o, d
 
 void rcvOdomCallBack (const nav_msgs::Odometry& odom_msg) {
   odom_now_ = odom_msg;
+  nav_msgs::Odometry odom_last_;
+  if(!odom_vector_.empty()) odom_last_ = odom_vector_.back();
   odom_vector_.push_back(odom_msg);
 
   if (odom_vector_.size() < 2) {  // 累计两个以上的odom后开始计算
@@ -80,19 +97,26 @@ void rcvOdomCallBack (const nav_msgs::Odometry& odom_msg) {
   }
 
   // STEP 1: 计算路径长度
-  traj_length_ = 0.0;
-  Eigen::Vector2d last_odom(odom_vector_[0].pose.pose.position.x, 
-                            odom_vector_[0].pose.pose.position.y);
-  for (int i = 1; i < odom_vector_.size(); i++) {
-    Eigen::Vector2d odom_i(odom_vector_[i].pose.pose.position.x, 
-                           odom_vector_[i].pose.pose.position.y);
-    double dis = (odom_i - last_odom).norm();
-    if (dis <= 0.01) {
-      dis = 0.0;
-    }
-    traj_length_ += dis;
-    last_odom = odom_i;
-  }
+  // traj_length_ = 0.0;
+  // Eigen::Vector2d last_odom(odom_vector_[0].pose.pose.position.x, 
+  //                           odom_vector_[0].pose.pose.position.y);
+  // for (int i = 1; i < odom_vector_.size(); i++) {
+  //   Eigen::Vector2d odom_i(odom_vector_[i].pose.pose.position.x, 
+  //                          odom_vector_[i].pose.pose.position.y);
+  //   double dis = (odom_i - last_odom).norm();
+  //   if (dis <= 0.01) {
+  //     dis = 0.0;
+  //   }
+  //   traj_length_ += dis;
+  //   last_odom = odom_i;
+  // }
+  Eigen::Vector2d lastpos{odom_last_.pose.pose.position.x, odom_last_.pose.pose.position.y};
+  Eigen::Vector2d currpos{odom_now_.pose.pose.position.x, odom_now_.pose.pose.position.y};
+  double dis = (currpos-lastpos).norm();
+  // dis = dis >= 0.005? dis: 0.0;
+  // std::cout<< "dis := "<< dis<< std::endl;
+  traj_length_ += dis;
+
   std::cout << "traj_leagth := " << traj_length_ << std::endl;
   // ----------更新导航路长
 
@@ -140,7 +164,8 @@ void rcvOdomCallBack (const nav_msgs::Odometry& odom_msg) {
 
   // STEP 3: 输出障碍物最近距离, 目标点距离
   for(int i = 0; i<distance_o.size(); i++){
-    std::cout << "--- dist_to_obs-num " << i<< " :="<< distance_o[i] << std::endl;
+    std::cout << "--- dist_to_obs-num " << i<< " :="<< distance_o[i]-0.4-0.4 << std::endl;
+    distance_to_obs_ls.push_back(std::make_pair(traj_time_, distance_o[i]));
   }
   std::cout << "Min_dist_to_obs := " << min_dist_to_obs_ << std::endl;
   std::cout << "Dist_to_goal := " << distance_g << std::endl;
@@ -155,7 +180,8 @@ void rcvOdomCallBack (const nav_msgs::Odometry& odom_msg) {
   std::cout<< "Robot's linear|anger velocity := "<< odom_now_.twist.twist.linear.x<< "|"<< odom_now_.twist.twist.angular.z <<std::endl;
   
   // ---------- 设置碰撞检查，统计碰撞次数
-  std::cout<< "collision_times := "<< collision_times<< std::endl;
+  // std::cout<< "collision_times := "<< collision_times<< std::endl;
+
   std::cout<< "------------- next -------------"<< std::endl;
 }
 
@@ -178,7 +204,7 @@ void stateCheckCallback (const ros::TimerEvent& e) {
   obs_Manager_->get_obs_state(cur_time, posVel_list, radius_list);
   // ---------- 更新min_dist_to_obs 距离障碍物的最短距离
   distance_o = Eigen::VectorXd::Zero(posVel_list.size());
-  double ROBOT_RADIUS = 0.60;
+  double ROBOT_RADIUS = 0.40;
   for (int i = 0; i < posVel_list.size(); i++) {
     // p_r - 0.4 - 0.6; set safety_dis = 0.2
     double dist_i_tmp0 = (pos_now - posVel_list[i].head(2)).norm() - radius_list[i] - ROBOT_RADIUS;
@@ -212,11 +238,11 @@ void writeToCSVFile(Eigen::VectorXd &output_data) {
     if (file.is_open()) {
       file<< std::endl;
       file<< ",";
-      file<< scenario<< ",";
-      file<< controller_<< ",";
+      file<< scenario_<< ",";
+      file<< controller_name<< ",\t";
       for (int i=0; i<8; i++){
         file<< output_data[i];
-        if(i<7) file<< ",";
+        if(i<7) file<< ",\t";
       }
       file.close();
       std::cout << "\033[1;33m----- Data written to file successfully. -----\033[0m" << std::endl;
@@ -227,15 +253,38 @@ void writeToCSVFile(Eigen::VectorXd &output_data) {
     }
 }
 
+void writeToCSVFile1(std::vector<std::pair<double, double>> &output_data){
+  std::ofstream file;
+  file.open(file_name1, std::ofstream::app);
+  if(file.is_open()){
+    file<< std::endl;
+    file<< controller_<< "-traj_time"<< ",";
+    for(int i=0; i<output_data.size(); i++){
+      file<< output_data[i].first<< ",";
+    }
+
+    file<< std::endl;
+    file<< controller_<< "-obs_dist"<< ",";
+    for(int i=0; i<output_data.size(); i++){
+      file<< output_data[i].second<< ",";
+    }    
+  }
+}
+
 int main (int argc, char** argv) {
 
 	ros::init (argc, argv, "data_processor_node");
 	ros::NodeHandle nh;
   nh.param("data_processor_node/data/record_sign", record_sign, false);
-
+  nh.param("data_processor_node/data/record_sign1", record_sign1, false);
+  nh.param("data_processor_node/scenario", scenario_, 1);
+  nh.param("data_processor_node/controller", controller_, 0);
+  controller_name = controller_ls[controller_];
+  // std::cout<< "Controller_name := "<< controller_name<< std::endl;
   // 初始化障碍物管理对象
   obs_Manager_.reset(new Obs_Manager);
   obs_Manager_->init(nh);
+  traj_length_ = 0.0;
 	ros::Subscriber odom_raw_sub  = nh.subscribe("/odometry", 1, rcvOdomCallBack);
   ros::Subscriber waypoint_sub_ = nh.subscribe("/move_base_simple/goal", 1, waypointCallback);
   ros::Timer checker_timer      = nh.createTimer(ros::Duration(0.02), stateCheckCallback);  // 定时碰撞检查
@@ -253,6 +302,11 @@ int main (int argc, char** argv) {
   output_data[7] = min_dist_to_obs_;
   if(record_sign){
     writeToCSVFile(output_data);
+  }
+
+  if(record_sign1){
+    writeToCSVFile1(distance_to_obs_ls);
+    std::cout<< "record_sign1 successful"<< std::endl;
   }
 	return 0;
 }

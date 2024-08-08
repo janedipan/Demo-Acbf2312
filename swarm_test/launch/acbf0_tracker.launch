@@ -11,25 +11,22 @@
   <arg name="front_adsm"    value="false" />
   <arg name="static_path"   value="false" />
 
-  <!-- MPC-D-CBF规划-->
-  <!-- <include file="$(find mpc_dcbf)/launch/mpc_adsm.launch">
-    <arg name="controller_" value="$(arg controller)"/>
-    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
-    <arg name="pre_step_" value="$(arg pre_step)" />
-    <arg name="step_time_" value="$(arg step_time)" />
-  </include> -->
 
   <!-- MPC-CBF C++版本 -->
-  <include file="$(find mpc_dcbf)/launch/mpc_adsm_c.launch">
-    <arg name="controller_" value="$(arg controller)"/>
-    <arg name="mpc_frequency_" value="$(arg mpc_frequency)" />
-    <arg name="pre_step_"   value="$(arg pre_step)" />
-    <arg name="step_time_"  value="$(arg step_time)" />
-    <arg name="odometry_topic" value="/robot1/odom" />
-    <arg name="obs_topic"   value="/globalFsm_by_adsm/obs_predict_pub" />
-    <arg name="cmd_topic_"  value="robot1/cmd_vel" />
-  </include>
+  <node name="local_planner" pkg="mpc_dcbf" type="mpc_node_c" output="screen">
+    <param name="mpc/controller_type" value="3"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step"    value="$(arg pre_step)" />
+    <param name="mpc/step_time"   value="$(arg step_time)" />
+    <param name="mpc/gamma"       value="0.25" />
+    <param name="mpc/tau_scale"   value="0.0" />
+  
+    <remap from="/Odometry" to="/Odometry" />
+    <remap from="/obs_Manager_node/obs_predict_pub" to="/globalFsm_by_adsm/obs_predict_pub" />
+    <remap from="/local_path" to="/local_path" />
+    <remap from="/cmd_vel"    to="/cmd_vel1" />
+  </node>
 
-  <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_plan.rviz" />
+  <!-- <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_plan.rviz" /> -->
 
 </launch>

@@ -14,6 +14,8 @@
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/Twist.h>
 
+
+
 // 定义一个用于存储状态和输入的结构体
 struct Solution {
     std::vector<std::vector<double>> states; // 多个状态，每个状态是一个向量
@@ -29,11 +31,15 @@ public:
     void init_solver(std::string _Sm, double& _Ts, int& _Ns, 
                         double _v_max, double _v_min, double _o_max, 
                         std::vector<double> _Q, std::vector<double> _R, 
-                        double _gamma, double _safe_dist, bool sign);
+                        double _gamma, double _tau_scale, double _safe_dist, bool sign);
     bool imp_solve(Eigen::VectorXd* param1, Eigen::MatrixXd* param2, Eigen::MatrixXd* param3);
+    void set_safety_st(std::string& smetric, casadi::Opti& opt, int index);
     std::vector<double> predict_x, predict_u;
     std::vector<double> getFirstUp();
     std::vector<double> getPredictXp();
+
+    // 存储处理障碍物
+    std::vector<bool> exit_obs1;
 
 private:
     std::string Mpc_type;       // 运动学模型
@@ -44,6 +50,7 @@ private:
     double v_min;               // 最小线速度
     double omega_max;           // 最大角速度
     double gamma_;              // for CBF
+    double tau_scale_;
     double safe_dist;           // 安全距离=机器人半径+膨胀半径
     std::vector<double> Q_p;    // Q矩阵对角线元素
     std::vector<double> R_p;    // R矩阵对角线元素
@@ -54,6 +61,8 @@ private:
     casadi::Opti prob;
     casadi::MX X_k;
     casadi::MX U_k;
+    casadi::MX lambda_;
+    casadi::MX tau_list;
 
     casadi::Function setKinematicEquation();
     casadi::Function kine_equation_;
@@ -68,8 +77,10 @@ private:
     void rotate_solution();                         // 求解失败时滚动操作
     std::vector<std::vector<double>> rotate_solution1(std::vector<double> x_arr, std::vector<double> u_arr);
     casadi::MX h1(casadi::MX& _curpos, Eigen::VectorXd _obs);
-    casadi::MX h2(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _vr, casadi::MX& _tau);
-    casadi::MX set_tau(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _vr);
+    casadi::MX h2(casadi::MX& _curpos, Eigen::VectorXd _obs, casadi::MX& _tau);
+    casadi::MX h3(casadi::MX& _curpos, Eigen::VectorXd _obs, Eigen::Vector2d _vr, double _tau);
+    casadi::MX set_tau(casadi::MX& _curpos, Eigen::VectorXd _obs);
+    double set_tau_value(Eigen::VectorXd _rob, Eigen::VectorXd _obs);
 };
 
 
@@ -78,6 +89,11 @@ public:
     MPC_PLANNER(){};
     ~MPC_PLANNER(){};
     void init_MPC_CBF(ros::NodeHandle& nh);
+    
+    MPC_SOLVE solver;
+    // 存储计算时间
+    std::vector<double> time_list1;
+    
 private:
     std::string Smetric_type;
     int controller;
@@ -85,7 +101,10 @@ private:
     double Ts_;
     int N_;
     int N_i; //对goal_state进行扩展
+    double gamma_;
+    double tau_scale_;
     bool use_initguess;
+    bool use_ahead;
 
     Eigen::VectorXd cur_state_;
     Eigen::MatrixXd global_path_;
@@ -103,7 +122,7 @@ private:
     int nums_of_planning;
     double cost_time_sum;
 
-    MPC_SOLVE solver;
+    
     // ros接口
     ros::NodeHandle nh_;
     ros::Timer timer_replan_, timer_pub;
@@ -123,6 +142,8 @@ private:
     void choose_goal_state();
     void smooth_yaw(Eigen::MatrixXd& ref_traj);
     void pub_Predict_traj(std::vector<double>& _predict_traj);
+
+
 
 };
 

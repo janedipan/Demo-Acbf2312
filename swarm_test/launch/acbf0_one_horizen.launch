@@ -72,26 +72,88 @@
     <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
     <param name="mpc/pre_step" value="$(arg pre_step)" />
     <param name="mpc/step_time" value="$(arg step_time)" />
-    <param name="mpc/gamma" value="0.25" />
-    <!-- <param name="mpc/show_obs"  value="true" /> -->
-
+    <param name="mpc/gamma" value="0.35" />
+ 
     <remap from="/Odometry" to="/odometry" />
     <remap from="/local_path" to="/local_path2" />
   </node>
-
 
   <node name="mpc_horizen3" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
     <param name="mpc/controller_type" value="4"/>
     <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
     <param name="mpc/pre_step" value="$(arg pre_step)" />
     <param name="mpc/step_time" value="$(arg step_time)" />
-    <param name="mpc/gamma" value="0.25" />
-    <param name="mpc/tau_scale" value="0.3" />
+    <param name="mpc/gamma" value="0.3" />
+    <param name="mpc/tau_scale" value="0.0" />
     
     <remap from="/Odometry" to="/odometry" />
     <remap from="/local_path" to="/local_path3" />
   </node>
 
+  <node name="mpc_horizen4" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="4"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.3" />
+    <param name="mpc/tau_scale" value="0.1" />
+    <param name="mpc/tau_N" value="27" />
+    
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path4" />
+  </node>
+
+  <node name="mpc_horizen5" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="4"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.3" />
+    <param name="mpc/tau_scale" value="0.2" />
+    <param name="mpc/tau_N" value="27" />
+    
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path5" />
+  </node>
+
+  <node name="mpc_horizen6" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="4"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.3" />
+    <param name="mpc/tau_scale" value="0.3" />
+    <param name="mpc/tau_N" value="27" />
+    
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path6" />
+  </node>
+
+  <node name="mpc_horizen7" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="4"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.3" />
+    <param name="mpc/tau_scale" value="0.40" />
+    <param name="mpc/tau_N" value="25" />
+    
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path7" />
+  </node>
+
+  <node name="mpc_horizen8" pkg="mpc_dcbf" type="mpc_horizen" output="screen">
+    <param name="mpc/controller_type" value="4"/>
+    <param name="mpc/mpc_frequency" value="$(arg mpc_frequency)" />
+    <param name="mpc/pre_step" value="$(arg pre_step)" />
+    <param name="mpc/step_time" value="$(arg step_time)" />
+    <param name="mpc/gamma" value="0.3" />
+    <param name="mpc/tau_scale" value="0.5" />
+    <param name="mpc/tau_N" value="25" />
+    
+    <remap from="/Odometry" to="/odometry" />
+    <remap from="/local_path" to="/local_path8" />
+  </node>
 
   <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find swarm_test)/config/acbf_horizen.rviz" />
 

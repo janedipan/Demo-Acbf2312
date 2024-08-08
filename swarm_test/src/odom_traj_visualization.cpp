@@ -22,7 +22,7 @@ void draw_corridor(const nav_msgs::Odometry& odom_msg) {
     odom_vector.pop_front();
   }
   odom_vector.push_back(odom_msg);
-
+  // ROS_WARN("pub_odom_traj is:%d",odom_vector.size());
   visualization_msgs::MarkerArray odom_traj_msg;
   visualization_msgs::Marker odom_point;
   odom_point.header= odom_msg.header;
@@ -39,6 +39,7 @@ void draw_corridor(const nav_msgs::Odometry& odom_msg) {
     odom_point.id = i;
     geometry_msgs::Point p;
     p = odom_vector[i].pose.pose.position;
+    // ROS_WARN("traj_id is:%f,%f",p.x, p.y);
     odom_point.points.push_back(p);
   }
   odom_traj_msg.markers.push_back(odom_point);
